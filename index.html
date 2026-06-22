@@ -99,7 +99,7 @@ function renderApps(){
   var dg=$('drawerGrid');dg.innerHTML='';apps.forEach(function(a){dg.appendChild(appEl(a))});
 }
 function showDesktop(){connected=true;$('panel').classList.add('hidden');$('desktop').classList.add('show');hideDrawer();$('video').style.display='none';$('navbar').classList.remove('show');}
-function showVideo(){$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';applyCal();$('navbar').classList.add('show');}
+function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';applyCal();$('navbar').classList.add('show');}
 function showDrawer(){$('drawer').classList.add('show')}
 function hideDrawer(){$('drawer').classList.remove('show')}
 function launch(pkg){send('launch',{pkg:pkg});showVideo();}
