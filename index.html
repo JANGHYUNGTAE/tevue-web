@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>TeVue</title>
+<style>
+:root{--bg:#000;--txt:#e6edf3;--sub:#8b949e;--blue:#2f81f7}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden}
+#video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none}
+#panel{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+#panel.hidden{display:none}
+h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0 0 22px rgba(47,129,247,.6)}
+.hint{color:var(--sub);font-size:15px;line-height:1.5}
+.dots span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin:0 3px;opacity:.3;animation:b 1.4s infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
+#status{position:fixed;top:10px;left:10px;background:rgba(13,17,23,.8);border:1px solid #21262d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);font-family:ui-monospace,monospace}
+</style></head>
+<body>
+<video id="video" autoplay playsinline></video>
+<div id="status">시작</div>
+<div id="panel">
+  <h1>Te<span class="v">V</span>ue</h1>
+  <div class="hint" id="msg">폰과 연결 중…</div>
+  <div class="dots"><span></span><span></span><span></span></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SB_URL='https://dvxnsmoneibdwzegualm.supabase.co';
+var SB_KEY='sb_publishable_a6gOpIV7KMr7KWkcuzn1eQ_CQoJ7k5W';
+var $=function(i){return document.getElementById(i)};
+function st(t){$('status').textContent=t}
+var pc=null,channel=null,sb=null;
+var ICE=[{urls:'stun:stun.l.google.com:19302'}];
+function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
+async function pubIP(){try{var r=await fetch('https://api.ipify.org?format=json');return (await r.json()).ip;}catch(e){return null}}
+function newPc(){
+  pc=new RTCPeerConnection({iceServers:ICE});
+  pc.ontrack=function(e){$('video').srcObject=e.streams[0];$('video').style.display='block';$('panel').classList.add('hidden');st('미러링 중');};
+  pc.onicecandidate=function(e){if(e.candidate)send('ice',{from:'receiver',candidate:{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}})};
+  pc.onconnectionstatechange=function(){st('P2P:'+pc.connectionState);if(pc.connectionState==='failed'){try{pc.restartIce()}catch(_){}}};
+}
+async function onOffer(p){try{if(!pc)newPc();await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});var a=await pc.createAnswer();await pc.setLocalDescription(a);send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});st('연결 중');}catch(e){$('msg').textContent='오류: '+e.message}}
+async function onIce(p){if(p.from==='receiver')return;try{if(pc&&p.candidate)await pc.addIceCandidate(p.candidate)}catch(_){}}
+function vidToDisp(cx,cy){var v=$('video');var r=v.getBoundingClientRect();var vw=v.videoWidth,vh=v.videoHeight;if(!vw||!vh)return null;var s=Math.min(r.width/vw,r.height/vh);var dw=vw*s,dh=vh*s;var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;var nx=(cx-ox)/dw,ny=(cy-oy)/dh;if(nx<0||nx>1||ny<0||ny>1)return null;return{x:nx*vw,y:ny*vh};}
+(function(){var v=$('video');var down=false;v.style.touchAction='none';
+  v.addEventListener('pointerdown',function(e){down=true;var p=vidToDisp(e.clientX,e.clientY);if(p)send('touch',{a:0,x:p.x,y:p.y});e.preventDefault();});
+  v.addEventListener('pointermove',function(e){if(down){var p=vidToDisp(e.clientX,e.clientY);if(p)send('touch',{a:2,x:p.x,y:p.y});}});
+  v.addEventListener('pointerup',function(e){down=false;var p=vidToDisp(e.clientX,e.clientY);if(p)send('touch',{a:1,x:p.x,y:p.y});});
+  v.addEventListener('pointercancel',function(){down=false;});
+})();
+async function connect(room){
+  st('방 입장: '+room);
+  sb=window.supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:20}}});
+  channel=sb.channel(room,{config:{broadcast:{self:false,ack:false}}});
+  channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
+    .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
+    .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');send('ready',{});}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
+}
+(async function(){
+  var q=new URLSearchParams(location.search).get('r');
+  var room;
+  if(q){room='tevue:'+q;}else{var ip=await pubIP();room=ip?('tevue:ip:'+ip.replace(/[.:]/g,'-')):'tevue:default';}
+  connect(room);
+})();
+</script>
+</body></html>
