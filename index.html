@@ -198,7 +198,9 @@ function dot(x,y){var d=document.createElement('div');d.className='caldot';d.sty
 function startCal(){calStep=1;calTL=null;clearDots();$('calbox').classList.add('show');$('calmsg').textContent='실제로 보이는 영역의\n① 좌측 상단 모서리를 탭';}
 function endCal(){$('calbox').classList.remove('show');clearDots();calStep=0;}
 $('calbox').addEventListener('pointerdown',function(e){
-  if(calStep===0)return;e.preventDefault();e.stopPropagation();
+  if(calStep===0)return;
+  if(e.target&&e.target.id==='calcancel'){endCal();return;} // 취소 버튼은 코너탭으로 먹지 않게
+  e.preventDefault();e.stopPropagation();
   if(calStep===1){calTL={x:e.clientX,y:e.clientY};dot(e.clientX,e.clientY);calStep=2;$('calmsg').textContent='② 우측 하단 모서리를 탭';}
   else if(calStep===2){
     var x1=Math.min(calTL.x,e.clientX),y1=Math.min(calTL.y,e.clientY);
