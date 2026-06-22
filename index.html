@@ -16,11 +16,21 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 @keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
 #status{position:fixed;top:10px;left:10px;background:rgba(13,17,23,.8);border:1px solid #21262d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);font-family:ui-monospace,monospace}
 #changecode{position:fixed;top:10px;right:10px;z-index:10;background:rgba(13,17,23,.85);border:1px solid #30363d;border-radius:8px;padding:7px 14px;font-size:13px;color:var(--sub)}
+#homebtn{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:11;display:none;background:rgba(13,17,23,.9);border:1px solid #30363d;border-radius:24px;padding:10px 26px;font-size:15px;color:#e6edf3}
+#launcher{position:fixed;inset:0;z-index:9;display:none;background:#000;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+#launcher.show{display:flex}
+#launcher .lg{display:grid;grid-template-columns:repeat(5,1fr);gap:18px 24px;max-width:760px;width:100%}
+#launcher .app{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px;border-radius:16px;background:#0d1117;border:1px solid #21262d}
+#launcher .app .ic{font-size:38px}
+#launcher .app .nm{font-size:13px;color:var(--sub)}
+#launcher .lh{font-size:14px;color:var(--sub);margin-bottom:20px}
 </style></head>
 <body>
 <video id="video" autoplay playsinline></video>
 <div id="status">시작</div>
 <button id="changecode">코드 변경</button>
+<button id="homebtn">⌂ 홈</button>
+<div id="launcher"><div class="lh">앱을 선택하면 차 화면에 실행됩니다</div><div class="lg" id="lgrid"></div></div>
 <div id="panel">
   <h1>Te<span class="v">V</span>ue</h1>
   <div class="hint" id="msg">폰과 연결 중…</div>
@@ -42,10 +52,24 @@ function st(t){$('status').textContent=t}
 var pc=null,channel=null,sb=null;
 var ICE=[{urls:'stun:stun.l.google.com:19302'}];
 function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
+var APPS=[
+ {n:'TMAP',p:'com.skt.tmap.ku',i:'🅣'},
+ {n:'카카오내비',p:'com.locnall.KimGiSa',i:'🧭'},
+ {n:'네이버지도',p:'com.nhn.android.nmap',i:'🗺️'},
+ {n:'카카오맵',p:'net.daum.android.map',i:'📍'},
+ {n:'유튜브',p:'com.google.android.youtube',i:'▶️'},
+ {n:'YT뮤직',p:'com.google.android.apps.youtube.music',i:'🎵'},
+ {n:'스포티파이',p:'com.spotify.music',i:'🟢'},
+ {n:'멜론',p:'com.iloen.melon',i:'🍈'},
+ {n:'벅스',p:'com.neowiz.android.bugs',i:'🎧'}
+];
+function renderLauncher(){var g=$('lgrid');if(!g||g.childElementCount)return;APPS.forEach(function(a){var d=document.createElement('div');d.className='app';d.innerHTML='<div class="ic">'+a.i+'</div><div class="nm">'+a.n+'</div>';d.onclick=function(){send('launch',{pkg:a.p});hideLauncher();};g.appendChild(d);});}
+function showLauncher(){renderLauncher();$('launcher').classList.add('show');}
+function hideLauncher(){$('launcher').classList.remove('show');}
 async function pubIP(){try{var r=await fetch('https://api.ipify.org?format=json');return (await r.json()).ip;}catch(e){return null}}
 function newPc(){
   pc=new RTCPeerConnection({iceServers:ICE});
-  pc.ontrack=function(e){$('video').srcObject=e.streams[0];$('video').style.display='block';$('panel').classList.add('hidden');st('미러링 중');};
+  pc.ontrack=function(e){$('video').srcObject=e.streams[0];$('video').style.display='block';$('panel').classList.add('hidden');st('미러링 중');$('homebtn').style.display='block';showLauncher();};
   pc.onicecandidate=function(e){if(e.candidate)send('ice',{from:'receiver',candidate:{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}})};
   pc.onconnectionstatechange=function(){st('P2P:'+pc.connectionState);if(pc.connectionState==='failed'){try{pc.restartIce()}catch(_){}}};
 }
@@ -84,6 +108,7 @@ function showInput(){
   inp.onkeydown=function(e){if(e.key==='Enter')startWithCode(inp.value)};
 }
 $('changecode').onclick=function(){try{localStorage.removeItem('tevue_code')}catch(_){}location.reload();};
+$('homebtn').onclick=function(){showLauncher();};
 (function(){
   var q=new URLSearchParams(location.search).get('r');
   var saved=null;try{saved=localStorage.getItem('tevue_code')}catch(_){}
