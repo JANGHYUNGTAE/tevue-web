@@ -32,7 +32,9 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 #drawerGrid{display:flex;flex-wrap:wrap;gap:24px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
 #drawerClose{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:13;background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:22px;padding:10px 30px;font-size:15px}
 /* 홈/상태/코드변경 */
-#homebtn{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:11;display:none;width:54px;height:54px;border-radius:50%;background:rgba(13,17,23,.85);border:1px solid #30363d;color:#e6edf3;font-size:22px}
+#navbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:11;display:none;gap:14px}
+#navbar.show{display:flex}
+#navbar button{width:54px;height:54px;border-radius:50%;background:rgba(13,17,23,.85);border:1px solid #30363d;color:#e6edf3;font-size:22px}
 #status{position:fixed;top:10px;left:10px;z-index:21;background:rgba(13,17,23,.6);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
 #changecode{position:fixed;top:10px;right:10px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
 </style></head>
@@ -47,7 +49,7 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
   <button id="dock">▦</button>
 </div>
 <div id="drawer"><div id="drawerGrid"></div><button id="drawerClose">닫기</button></div>
-<button id="homebtn">⌂</button>
+<div id="navbar"><button id="backbtn">‹</button><button id="homebtn">⌂</button></div>
 
 <div id="panel">
   <h1>Te<span class="v">V</span>ue</h1>
@@ -85,14 +87,15 @@ function renderApps(){
   var g=$('apps');g.innerHTML='';apps.forEach(function(a){g.appendChild(appEl(a))});
   var dg=$('drawerGrid');dg.innerHTML='';apps.forEach(function(a){dg.appendChild(appEl(a))});
 }
-function showDesktop(){connected=true;$('panel').classList.add('hidden');$('desktop').classList.add('show');hideDrawer();$('video').style.display='none';$('homebtn').style.display='none';}
-function showVideo(){$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';$('homebtn').style.display='block';}
+function showDesktop(){connected=true;$('panel').classList.add('hidden');$('desktop').classList.add('show');hideDrawer();$('video').style.display='none';$('navbar').classList.remove('show');}
+function showVideo(){$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';$('navbar').classList.add('show');}
 function showDrawer(){$('drawer').classList.add('show')}
 function hideDrawer(){$('drawer').classList.remove('show')}
 function launch(pkg){send('launch',{pkg:pkg});showVideo();}
 $('dock').onclick=showDrawer;
 $('drawerClose').onclick=hideDrawer;
-$('homebtn').onclick=function(){send('home',{});showDesktop();};
+$('homebtn').onclick=function(){showDesktop();};
+$('backbtn').onclick=function(){send('key',{code:4});};
 
 // ── WebRTC ───────────────────────────────────────────
 function newPc(){
@@ -106,7 +109,7 @@ function resetForReconnect(){
   try{if(pc)pc.close()}catch(_){}
   pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;
   try{$('video').srcObject=null}catch(_){}
-  $('video').style.display='none';$('desktop').classList.remove('show');$('homebtn').style.display='none';
+  $('video').style.display='none';$('desktop').classList.remove('show');$('navbar').classList.remove('show');
   $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
   startReady();
 }
