@@ -105,13 +105,13 @@ function hideDrawer(){$('drawer').classList.remove('show')}
 function launch(pkg){send('launch',{pkg:pkg});showVideo();}
 $('dock').onclick=showDrawer;
 $('drawerClose').onclick=hideDrawer;
-$('homebtn').onclick=function(){showDesktop();}; // 홈=웹 데스크톱 표시(삼성 DeX 안 건드림). KEYCODE_HOME 주입 X(삼성DeX 노출 방지)
+$('homebtn').onclick=function(){send('home');showVideo();}; // 홈=네이티브 DeX 홈(SECONDARY_HOME) — DeX 통일
 $('backbtn').onclick=function(){send('key',{code:4});};
 $('appsbtn').onclick=function(){showDrawer();}; // 앱전환(영상 위 앱목록 — 삼성 DeX recents 대체, 차 화면 기준)
 
 // ── WebRTC ───────────────────────────────────────────
 var connectWatch=null,connTries=0;
-function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');showDesktop();}
+function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');showVideo();} // DeX 네이티브 화면 바로 표시(우리 웹홈 X)
 function armWatchdog(){
   if(connectWatch)clearTimeout(connectWatch);
   connectWatch=setTimeout(function(){
