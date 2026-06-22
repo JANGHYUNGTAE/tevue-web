@@ -94,7 +94,7 @@ function hideDrawer(){$('drawer').classList.remove('show')}
 function launch(pkg){send('launch',{pkg:pkg});showVideo();}
 $('dock').onclick=showDrawer;
 $('drawerClose').onclick=hideDrawer;
-$('homebtn').onclick=function(){showDesktop();};
+$('homebtn').onclick=function(){send('key',{code:3});showDesktop();}; // HOME=앱 백그라운드 + 웹 데스크톱이 삼성DeX 덮음
 $('backbtn').onclick=function(){send('key',{code:4});};
 
 // ── WebRTC ───────────────────────────────────────────
