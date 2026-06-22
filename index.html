@@ -140,7 +140,9 @@ function vidToDisp(cx,cy){var v=$('video');var r=v.getBoundingClientRect();var v
 })();
 
 var readyTimer=null;
-function startReady(){if(readyTimer)return;send('ready',{});readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',{});},2000);}
+// 차 화면 CSS 크기 → 폰이 가상디스플레이를 이 크기로 생성(짤림 방지). dpi 160 이라 dp=CSS=레이아웃 정확.
+function readyMsg(){return {w:window.innerWidth,h:window.innerHeight};}
+function startReady(){if(readyTimer)return;send('ready',readyMsg());readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',readyMsg());},2000);}
 function stopReady(){if(readyTimer){clearInterval(readyTimer);readyTimer=null;}}
 async function connect(room){
   st('방 입장');$('status').style.display='block';$('changecode').style.display='block';
