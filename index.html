@@ -37,11 +37,19 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 #navbar button{width:54px;height:54px;border-radius:50%;background:rgba(13,17,23,.85);border:1px solid #30363d;color:#e6edf3;font-size:22px}
 #status{position:fixed;top:10px;left:10px;z-index:21;background:rgba(13,17,23,.6);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
 #changecode{position:fixed;top:10px;right:10px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
+#calibrate{position:fixed;top:10px;right:104px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
+#calbox{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+#calbox.show{display:flex}
+#calmsg{color:#e6edf3;font-size:22px;text-align:center;line-height:1.5}
+#calcancel{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 20px;color:#e6edf3;font-size:14px}
+.caldot{position:fixed;width:46px;height:46px;border:3px solid #2f81f7;border-radius:50%;transform:translate(-50%,-50%);z-index:41;pointer-events:none;box-shadow:0 0 12px #2f81f7}
 </style></head>
 <body>
 <video id="video" autoplay playsinline></video>
 <div id="status">시작</div>
 <button id="changecode">코드 변경</button>
+<button id="calibrate">⚙ 화면보정</button>
+<div id="calbox"><div id="calmsg"></div><button id="calcancel">취소</button></div>
 
 <div id="desktop">
   <div id="topbar"><span id="clock"></span></div>
@@ -73,6 +81,7 @@ function st(t){$('status').textContent=t}
 var pc=null,channel=null,sb=null,apps=[],connected=false;
 var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결, 인터넷 우회 차단(영상 데이터 0 보장)
 var dispW=0,dispH=0; // 가상디스플레이 실제 픽셀(offer 로 받음) — 터치 좌표 정확도
+var cal=null; // 화면 보정 rect{x,y,w,h} — 차 브라우저 크롬 가림 보정(차마다 저장)
 function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
 
 // ── 데스크톱 ──────────────────────────────────────────
@@ -89,7 +98,7 @@ function renderApps(){
   var dg=$('drawerGrid');dg.innerHTML='';apps.forEach(function(a){dg.appendChild(appEl(a))});
 }
 function showDesktop(){connected=true;$('panel').classList.add('hidden');$('desktop').classList.add('show');hideDrawer();$('video').style.display='none';$('navbar').classList.remove('show');}
-function showVideo(){$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';$('navbar').classList.add('show');}
+function showVideo(){$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';applyCal();$('navbar').classList.add('show');}
 function showDrawer(){$('drawer').classList.add('show')}
 function hideDrawer(){$('drawer').classList.remove('show')}
 function launch(pkg){send('launch',{pkg:pkg});showVideo();}
@@ -147,13 +156,14 @@ document.addEventListener('pointerdown',tryFullscreen,{once:false});
 var readyTimer=null;
 // 차 실제 가시영역(visualViewport=브라우저 크롬 제외) + dpr → 폰이 그 크기×dpr 로 디스플레이 생성(짤림X, 선명).
 function vpSize(){var vv=window.visualViewport;return {w:Math.round((vv&&vv.width)||window.innerWidth),h:Math.round((vv&&vv.height)||window.innerHeight)};}
-function readyMsg(){var s=vpSize();return {w:s.w,h:s.h,dpr:Math.min(3,Math.max(1,window.devicePixelRatio||1))};}
+function readyMsg(){var d=Math.min(3,Math.max(1,window.devicePixelRatio||1));if(cal&&cal.w>40&&cal.h>40)return {w:cal.w,h:cal.h,dpr:d};var s=vpSize();return {w:s.w,h:s.h,dpr:d};}
 function startReady(){if(readyTimer)return;send('ready',readyMsg());readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',readyMsg());},2000);}
 function stopReady(){if(readyTimer){clearInterval(readyTimer);readyTimer=null;}}
 async function connect(room){
   st('방 입장');$('status').style.display='block';
   // 코드 변경 버튼은 처음 10초만 표시 후 자동 숨김(이미 저장된 코드면 거슬리지 않게).
-  $('changecode').style.display='block';setTimeout(function(){$('changecode').style.display='none';},10000);
+  $('changecode').style.display='block';$('calibrate').style.display='block';
+  setTimeout(function(){$('changecode').style.display='none';$('calibrate').style.display='none';},10000);
   sb=window.supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:20}}});
   channel=sb.channel(room,{config:{broadcast:{self:false,ack:false}}});
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
@@ -166,6 +176,7 @@ function startWithCode(code){
   code=(code||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toUpperCase();
   if(!code)return;
   try{localStorage.setItem('tevue_code',code)}catch(_){}
+  curCode=code;loadCal(); // 이 차의 화면보정 적용
   $('codebox').style.display='none';$('dots').style.display='';$('msg').textContent='폰과 연결 중…';
   connect('tevue:'+code);
 }
@@ -176,6 +187,28 @@ function showInput(){
   inp.onkeydown=function(e){if(e.key==='Enter')startWithCode(inp.value)};
 }
 $('changecode').onclick=function(){try{localStorage.removeItem('tevue_code')}catch(_){}location.reload();};
+// 화면 보정: 차 브라우저 크롬이 가린 영역 제외, 실제 보이는 영역을 코너 2탭으로 지정(차마다 1회).
+var curCode='';
+function calKey(){return 'tevue_cal_'+(curCode||'');}
+function loadCal(){try{var s=localStorage.getItem(calKey());cal=s?JSON.parse(s):null;}catch(_){cal=null;}applyCal();}
+function applyCal(){var v=$('video');if(cal&&cal.w>40&&cal.h>40){v.style.left=cal.x+'px';v.style.top=cal.y+'px';v.style.right='auto';v.style.bottom='auto';v.style.width=cal.w+'px';v.style.height=cal.h+'px';}else{v.style.left='';v.style.top='';v.style.right='';v.style.bottom='';v.style.width='';v.style.height='';}}
+var calStep=0,calTL=null;
+function clearDots(){var ds=document.querySelectorAll('.caldot');for(var i=0;i<ds.length;i++)ds[i].remove();}
+function dot(x,y){var d=document.createElement('div');d.className='caldot';d.style.left=x+'px';d.style.top=y+'px';document.body.appendChild(d);}
+function startCal(){calStep=1;calTL=null;clearDots();$('calbox').classList.add('show');$('calmsg').textContent='실제로 보이는 영역의\n① 좌측 상단 모서리를 탭';}
+function endCal(){$('calbox').classList.remove('show');clearDots();calStep=0;}
+$('calbox').addEventListener('pointerdown',function(e){
+  if(calStep===0)return;e.preventDefault();e.stopPropagation();
+  if(calStep===1){calTL={x:e.clientX,y:e.clientY};dot(e.clientX,e.clientY);calStep=2;$('calmsg').textContent='② 우측 하단 모서리를 탭';}
+  else if(calStep===2){
+    var x1=Math.min(calTL.x,e.clientX),y1=Math.min(calTL.y,e.clientY);
+    var w=Math.abs(e.clientX-calTL.x),h=Math.abs(e.clientY-calTL.y);
+    if(w>60&&h>60){try{localStorage.setItem(calKey(),JSON.stringify({x:Math.round(x1),y:Math.round(y1),w:Math.round(w),h:Math.round(h)}));}catch(_){}}
+    $('calmsg').textContent='보정 저장됨 — 다시 연결합니다…';setTimeout(function(){location.reload();},700);
+  }
+},true);
+$('calcancel').onclick=endCal;
+$('calibrate').onclick=startCal;
 clock();setInterval(clock,15000);
 (function(){
   var q=new URLSearchParams(location.search).get('r');
