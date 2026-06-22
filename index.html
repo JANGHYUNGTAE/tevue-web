@@ -72,6 +72,7 @@ var $=function(i){return document.getElementById(i)};
 function st(t){$('status').textContent=t}
 var pc=null,channel=null,sb=null,apps=[],connected=false;
 var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결, 인터넷 우회 차단(영상 데이터 0 보장)
+var dispW=0,dispH=0; // 가상디스플레이 실제 픽셀(offer 로 받음) — 터치 좌표 정확도
 function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
 
 // ── 데스크톱 ──────────────────────────────────────────
@@ -126,26 +127,33 @@ function resetForReconnect(){
   $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
   startReady();
 }
-async function onOffer(p){if(answered)return;answered=true;try{if(!pc)newPc();await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});remoteSet=true;for(var i=0;i<pendingIce.length;i++){try{await pc.addIceCandidate(pendingIce[i])}catch(_){}}pendingIce=[];var a=await pc.createAnswer();await pc.setLocalDescription(a);send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});st('연결 중');armWatchdog();}catch(e){answered=false;$('msg').textContent='오류: '+e.message}}
+async function onOffer(p){if(answered)return;answered=true;try{if(p.display){dispW=p.display.w||0;dispH=p.display.h||0;}if(!pc)newPc();await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});remoteSet=true;for(var i=0;i<pendingIce.length;i++){try{await pc.addIceCandidate(pendingIce[i])}catch(_){}}pendingIce=[];var a=await pc.createAnswer();await pc.setLocalDescription(a);send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});st('연결 중');armWatchdog();}catch(e){answered=false;$('msg').textContent='오류: '+e.message}}
 async function onIce(p){if(p.from==='receiver'||!p.candidate)return;if(!pc||!remoteSet){pendingIce.push(p.candidate);return;}try{await pc.addIceCandidate(p.candidate)}catch(_){}}
 function onApps(p){if(p&&p.apps){apps=p.apps;renderApps();}}
 
 // ── 터치(영상=실행중인 앱) ───────────────────────────
-function vidToDisp(cx,cy){var v=$('video');var r=v.getBoundingClientRect();var vw=v.videoWidth,vh=v.videoHeight;if(!vw||!vh)return null;var s=Math.min(r.width/vw,r.height/vh);var dw=vw*s,dh=vh*s;var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;var nx=(cx-ox)/dw,ny=(cy-oy)/dh;if(nx<0||nx>1||ny<0||ny>1)return null;return{x:nx*vw,y:ny*vh};}
+function vidToDisp(cx,cy){var v=$('video'),r=v.getBoundingClientRect();var iw=dispW||v.videoWidth,ih=dispH||v.videoHeight;if(!iw||!ih||!r.width||!r.height)return null;var s=Math.min(r.width/iw,r.height/ih);var dw=iw*s,dh=ih*s;var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;var x=(cx-ox)/s,y=(cy-oy)/s;if(x<0||x>iw||y<0||y>ih)return null;return{x:x,y:y};}
 (function(){var v=$('video');var down=false,lastP=null,lastMove=0;v.style.touchAction='none';
   v.addEventListener('pointerdown',function(e){down=true;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:0,x:p.x,y:p.y});}e.preventDefault();});
-  v.addEventListener('pointermove',function(e){if(!down)return;var now=Date.now();if(now-lastMove<50)return;lastMove=now;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:2,x:p.x,y:p.y});}});
+  v.addEventListener('pointermove',function(e){if(!down)return;var now=Date.now();if(now-lastMove<16)return;lastMove=now;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:2,x:p.x,y:p.y});}});
   v.addEventListener('pointerup',function(e){down=false;var p=vidToDisp(e.clientX,e.clientY)||lastP;if(p)send('touch',{a:1,x:p.x,y:p.y});});
   v.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y});down=false;});
 })();
 
+// 테슬라 브라우저 상/하단 크롬이 화면을 가림 → 첫 사용자 탭에서 풀스크린 시도(지원 시). best-effort.
+var fsTried=false;
+function tryFullscreen(){if(fsTried)return;fsTried=true;var el=document.documentElement;var fn=el.requestFullscreen||el.webkitRequestFullscreen;if(fn){try{var r=fn.call(el);if(r&&r.catch)r.catch(function(){});}catch(_){}}}
+document.addEventListener('pointerdown',tryFullscreen,{once:false});
 var readyTimer=null;
-// 차 화면 CSS 크기 → 폰이 가상디스플레이를 이 크기로 생성(짤림 방지). dpi 160 이라 dp=CSS=레이아웃 정확.
-function readyMsg(){return {w:window.innerWidth,h:window.innerHeight};}
+// 차 실제 가시영역(visualViewport=브라우저 크롬 제외) + dpr → 폰이 그 크기×dpr 로 디스플레이 생성(짤림X, 선명).
+function vpSize(){var vv=window.visualViewport;return {w:Math.round((vv&&vv.width)||window.innerWidth),h:Math.round((vv&&vv.height)||window.innerHeight)};}
+function readyMsg(){var s=vpSize();return {w:s.w,h:s.h,dpr:Math.min(3,Math.max(1,window.devicePixelRatio||1))};}
 function startReady(){if(readyTimer)return;send('ready',readyMsg());readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',readyMsg());},2000);}
 function stopReady(){if(readyTimer){clearInterval(readyTimer);readyTimer=null;}}
 async function connect(room){
-  st('방 입장');$('status').style.display='block';$('changecode').style.display='block';
+  st('방 입장');$('status').style.display='block';
+  // 코드 변경 버튼은 처음 10초만 표시 후 자동 숨김(이미 저장된 코드면 거슬리지 않게).
+  $('changecode').style.display='block';setTimeout(function(){$('changecode').style.display='none';},10000);
   sb=window.supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:20}}});
   channel=sb.channel(room,{config:{broadcast:{self:false,ack:false}}});
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
