@@ -22,7 +22,14 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 <div id="panel">
   <h1>Te<span class="v">V</span>ue</h1>
   <div class="hint" id="msg">폰과 연결 중…</div>
-  <div class="dots"><span></span><span></span><span></span></div>
+  <div class="dots" id="dots"><span></span><span></span><span></span></div>
+  <div id="codebox" style="display:none;margin-top:6px">
+    <div class="hint" style="margin-bottom:10px">폰 화면의 코드를 입력하세요 (최초 1회)</div>
+    <input id="codeinput" maxlength="6" autocapitalize="characters" autocomplete="off"
+      style="font-size:30px;letter-spacing:8px;text-align:center;width:180px;padding:10px;border-radius:10px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;text-transform:uppercase"/>
+    <div><button id="codebtn"
+      style="margin-top:14px;font-size:18px;padding:10px 28px;border-radius:10px;border:0;background:#2f81f7;color:#fff;font-weight:700">연결</button></div>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -58,11 +65,24 @@ async function connect(room){
     .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
     .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');send('ready',{});}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
 }
-(async function(){
+function startWithCode(code){
+  code=(code||'').trim().toUpperCase();
+  if(!code)return;
+  try{localStorage.setItem('tevue_code',code)}catch(_){}
+  $('codebox').style.display='none';$('dots').style.display='';$('msg').textContent='폰과 연결 중…';
+  connect('tevue:'+code);
+}
+function showInput(){
+  $('msg').textContent='폰 코드를 입력하세요';$('dots').style.display='none';$('codebox').style.display='';
+  var inp=$('codeinput');try{inp.focus()}catch(_){}
+  $('codebtn').onclick=function(){startWithCode(inp.value)};
+  inp.onkeydown=function(e){if(e.key==='Enter')startWithCode(inp.value)};
+}
+(function(){
   var q=new URLSearchParams(location.search).get('r');
-  var room;
-  if(q){room='tevue:'+q;}else{var ip=await pubIP();room=ip?('tevue:ip:'+ip.replace(/[.:]/g,'-')):'tevue:default';}
-  connect(room);
+  var saved=null;try{saved=localStorage.getItem('tevue_code')}catch(_){}
+  var code=(q||saved||'').trim().toUpperCase();
+  if(code)startWithCode(code); else showInput();
 })();
 </script>
 </body></html>
