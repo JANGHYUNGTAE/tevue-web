@@ -40,14 +40,15 @@ function newPc(){
   pc.onicecandidate=function(e){if(e.candidate)send('ice',{from:'receiver',candidate:{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}})};
   pc.onconnectionstatechange=function(){st('P2P:'+pc.connectionState);if(pc.connectionState==='failed'){try{pc.restartIce()}catch(_){}}};
 }
-async function onOffer(p){try{if(!pc)newPc();await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});var a=await pc.createAnswer();await pc.setLocalDescription(a);send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});st('연결 중');}catch(e){$('msg').textContent='오류: '+e.message}}
-async function onIce(p){if(p.from==='receiver')return;try{if(pc&&p.candidate)await pc.addIceCandidate(p.candidate)}catch(_){}}
+var pendingIce=[],remoteSet=false;
+async function onOffer(p){try{if(!pc)newPc();await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});remoteSet=true;for(var i=0;i<pendingIce.length;i++){try{await pc.addIceCandidate(pendingIce[i])}catch(_){}}pendingIce=[];var a=await pc.createAnswer();await pc.setLocalDescription(a);send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});st('연결 중');}catch(e){$('msg').textContent='오류: '+e.message}}
+async function onIce(p){if(p.from==='receiver'||!p.candidate)return;if(!pc||!remoteSet){pendingIce.push(p.candidate);return;}try{await pc.addIceCandidate(p.candidate)}catch(_){}}
 function vidToDisp(cx,cy){var v=$('video');var r=v.getBoundingClientRect();var vw=v.videoWidth,vh=v.videoHeight;if(!vw||!vh)return null;var s=Math.min(r.width/vw,r.height/vh);var dw=vw*s,dh=vh*s;var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;var nx=(cx-ox)/dw,ny=(cy-oy)/dh;if(nx<0||nx>1||ny<0||ny>1)return null;return{x:nx*vw,y:ny*vh};}
-(function(){var v=$('video');var down=false;v.style.touchAction='none';
-  v.addEventListener('pointerdown',function(e){down=true;var p=vidToDisp(e.clientX,e.clientY);if(p)send('touch',{a:0,x:p.x,y:p.y});e.preventDefault();});
-  v.addEventListener('pointermove',function(e){if(down){var p=vidToDisp(e.clientX,e.clientY);if(p)send('touch',{a:2,x:p.x,y:p.y});}});
-  v.addEventListener('pointerup',function(e){down=false;var p=vidToDisp(e.clientX,e.clientY);if(p)send('touch',{a:1,x:p.x,y:p.y});});
-  v.addEventListener('pointercancel',function(){down=false;});
+(function(){var v=$('video');var down=false,lastP=null,lastMove=0;v.style.touchAction='none';
+  v.addEventListener('pointerdown',function(e){down=true;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:0,x:p.x,y:p.y});}e.preventDefault();});
+  v.addEventListener('pointermove',function(e){if(!down)return;var now=Date.now();if(now-lastMove<50)return;lastMove=now;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:2,x:p.x,y:p.y});}});
+  v.addEventListener('pointerup',function(e){down=false;var p=vidToDisp(e.clientX,e.clientY)||lastP;if(p)send('touch',{a:1,x:p.x,y:p.y});});
+  v.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y});down=false;});
 })();
 async function connect(room){
   st('방 입장: '+room);
