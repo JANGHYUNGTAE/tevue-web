@@ -15,10 +15,12 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
 @keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
 #status{position:fixed;top:10px;left:10px;background:rgba(13,17,23,.8);border:1px solid #21262d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);font-family:ui-monospace,monospace}
+#changecode{position:fixed;top:10px;right:10px;z-index:10;background:rgba(13,17,23,.85);border:1px solid #30363d;border-radius:8px;padding:7px 14px;font-size:13px;color:var(--sub)}
 </style></head>
 <body>
 <video id="video" autoplay playsinline></video>
 <div id="status">시작</div>
+<button id="changecode">코드 변경</button>
 <div id="panel">
   <h1>Te<span class="v">V</span>ue</h1>
   <div class="hint" id="msg">폰과 연결 중…</div>
@@ -81,6 +83,7 @@ function showInput(){
   $('codebtn').onclick=function(){startWithCode(inp.value)};
   inp.onkeydown=function(e){if(e.key==='Enter')startWithCode(inp.value)};
 }
+$('changecode').onclick=function(){try{localStorage.removeItem('tevue_code')}catch(_){}location.reload();};
 (function(){
   var q=new URLSearchParams(location.search).get('r');
   var saved=null;try{saved=localStorage.getItem('tevue_code')}catch(_){}
