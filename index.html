@@ -4,23 +4,51 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <title>TeVue</title>
 <style>
-:root{--bg:#000;--txt:#e6edf3;--sub:#8b949e;--blue:#2f81f7}
-*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden}
-#video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none}
-#panel{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+:root{--bg:#000;--txt:#e6edf3;--sub:#9aa4b2;--blue:#2f81f7}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
+#video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none;z-index:5}
+/* 연결 패널 */
+#panel{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:#000}
 #panel.hidden{display:none}
 h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0 0 22px rgba(47,129,247,.6)}
 .hint{color:var(--sub);font-size:15px;line-height:1.5}
 .dots span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin:0 3px;opacity:.3;animation:b 1.4s infinite}
 .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
 @keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
-#status{position:fixed;top:10px;left:10px;background:rgba(13,17,23,.8);border:1px solid #21262d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);font-family:ui-monospace,monospace}
-#changecode{position:fixed;top:10px;right:10px;z-index:10;background:rgba(13,17,23,.85);border:1px solid #30363d;border-radius:8px;padding:7px 14px;font-size:13px;color:var(--sub)}
+/* 데스크톱 */
+#desktop{position:fixed;inset:0;z-index:8;display:none;background:linear-gradient(165deg,#241a4d 0%,#4a2a8f 45%,#6d34c9 100%)}
+#desktop.show{display:block}
+#desktop::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:radial-gradient(120% 100% at 50% 100%,rgba(124,58,237,.55),transparent 70%)}
+#topbar{position:absolute;top:14px;right:20px;left:20px;display:flex;justify-content:flex-end;align-items:center;color:#fff;font-size:14px;opacity:.85;font-weight:600}
+#apps{position:absolute;left:0;right:0;top:90px;display:flex;flex-wrap:wrap;gap:26px 30px;justify-content:center;align-content:flex-start;padding:0 40px}
+.app{width:96px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer}
+.app img{width:64px;height:64px;border-radius:18px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.app .nm{color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.4);max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app:active{transform:scale(.92)}
+#dock{position:absolute;bottom:18px;right:18px;z-index:9;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.16);backdrop-filter:blur(8px);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center}
+/* 앱 서랍 */
+#drawer{position:fixed;inset:0;z-index:12;display:none;background:rgba(10,8,24,.92);backdrop-filter:blur(6px);padding:50px 32px 90px}
+#drawer.show{display:block}
+#drawerGrid{display:flex;flex-wrap:wrap;gap:24px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
+#drawerClose{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:13;background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:22px;padding:10px 30px;font-size:15px}
+/* 홈/상태/코드변경 */
+#homebtn{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:11;display:none;width:54px;height:54px;border-radius:50%;background:rgba(13,17,23,.85);border:1px solid #30363d;color:#e6edf3;font-size:22px}
+#status{position:fixed;top:10px;left:10px;z-index:21;background:rgba(13,17,23,.6);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
+#changecode{position:fixed;top:10px;right:10px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
 </style></head>
 <body>
 <video id="video" autoplay playsinline></video>
 <div id="status">시작</div>
 <button id="changecode">코드 변경</button>
+
+<div id="desktop">
+  <div id="topbar"><span id="clock"></span></div>
+  <div id="apps"></div>
+  <button id="dock">▦</button>
+</div>
+<div id="drawer"><div id="drawerGrid"></div><button id="drawerClose">닫기</button></div>
+<button id="homebtn">⌂</button>
+
 <div id="panel">
   <h1>Te<span class="v">V</span>ue</h1>
   <div class="hint" id="msg">폰과 연결 중…</div>
@@ -33,33 +61,60 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
       style="margin-top:14px;font-size:18px;padding:10px 28px;border-radius:10px;border:0;background:#2f81f7;color:#fff;font-weight:700">연결</button></div>
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SB_URL='https://dvxnsmoneibdwzegualm.supabase.co';
 var SB_KEY='sb_publishable_a6gOpIV7KMr7KWkcuzn1eQ_CQoJ7k5W';
 var $=function(i){return document.getElementById(i)};
 function st(t){$('status').textContent=t}
-var pc=null,channel=null,sb=null;
+var pc=null,channel=null,sb=null,apps=[],connected=false;
 var ICE=[{urls:'stun:stun.l.google.com:19302'}];
 function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
-async function pubIP(){try{var r=await fetch('https://api.ipify.org?format=json');return (await r.json()).ip;}catch(e){return null}}
+
+// ── 데스크톱 ──────────────────────────────────────────
+function clock(){var d=new Date();$('clock').textContent=(''+d.getHours()).padStart(2,'0')+':'+(''+d.getMinutes()).padStart(2,'0')}
+function iconSrc(ic){return ic?(ic.indexOf('data:')===0?ic:'data:image/png;base64,'+ic):''}
+function appEl(a){
+  var d=document.createElement('div');d.className='app';
+  d.innerHTML='<img src="'+iconSrc(a.icon)+'"/><div class="nm">'+a.label+'</div>';
+  d.onclick=function(){launch(a.pkg)};
+  return d;
+}
+function renderApps(){
+  var g=$('apps');g.innerHTML='';apps.forEach(function(a){g.appendChild(appEl(a))});
+  var dg=$('drawerGrid');dg.innerHTML='';apps.forEach(function(a){dg.appendChild(appEl(a))});
+}
+function showDesktop(){connected=true;$('panel').classList.add('hidden');$('desktop').classList.add('show');hideDrawer();$('video').style.display='none';$('homebtn').style.display='none';}
+function showVideo(){$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';$('homebtn').style.display='block';}
+function showDrawer(){$('drawer').classList.add('show')}
+function hideDrawer(){$('drawer').classList.remove('show')}
+function launch(pkg){send('launch',{pkg:pkg});showVideo();}
+$('dock').onclick=showDrawer;
+$('drawerClose').onclick=hideDrawer;
+$('homebtn').onclick=function(){send('home',{});showDesktop();};
+
+// ── WebRTC ───────────────────────────────────────────
 function newPc(){
   pc=new RTCPeerConnection({iceServers:ICE});
-  pc.ontrack=function(e){$('video').srcObject=e.streams[0];$('video').style.display='block';$('panel').classList.add('hidden');st('미러링 중');};
+  pc.ontrack=function(e){$('video').srcObject=e.streams[0];st('연결됨');showDesktop();};
   pc.onicecandidate=function(e){if(e.candidate)send('ice',{from:'receiver',candidate:{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}})};
   pc.onconnectionstatechange=function(){var s=pc.connectionState;st('P2P:'+s);if(s==='failed'||s==='closed'){resetForReconnect();}};
 }
 var pendingIce=[],remoteSet=false,answered=false;
-// A 가 멈췄다 다시 시작하면(=새 offer) 재연결되도록 초기화 + ready 재개. (코드 1회 입력 후 재연결)
 function resetForReconnect(){
   try{if(pc)pc.close()}catch(_){}
-  pc=null;answered=false;remoteSet=false;pendingIce=[];
+  pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;
   try{$('video').srcObject=null}catch(_){}
-  $('video').style.display='none';$('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
+  $('video').style.display='none';$('desktop').classList.remove('show');$('homebtn').style.display='none';
+  $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
   startReady();
 }
 async function onOffer(p){if(answered)return;answered=true;try{if(!pc)newPc();await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});remoteSet=true;for(var i=0;i<pendingIce.length;i++){try{await pc.addIceCandidate(pendingIce[i])}catch(_){}}pendingIce=[];var a=await pc.createAnswer();await pc.setLocalDescription(a);send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});st('연결 중');}catch(e){answered=false;$('msg').textContent='오류: '+e.message}}
 async function onIce(p){if(p.from==='receiver'||!p.candidate)return;if(!pc||!remoteSet){pendingIce.push(p.candidate);return;}try{await pc.addIceCandidate(p.candidate)}catch(_){}}
+function onApps(p){if(p&&p.apps){apps=p.apps;renderApps();}}
+
+// ── 터치(영상=실행중인 앱) ───────────────────────────
 function vidToDisp(cx,cy){var v=$('video');var r=v.getBoundingClientRect();var vw=v.videoWidth,vh=v.videoHeight;if(!vw||!vh)return null;var s=Math.min(r.width/vw,r.height/vh);var dw=vw*s,dh=vh*s;var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;var nx=(cx-ox)/dw,ny=(cy-oy)/dh;if(nx<0||nx>1||ny<0||ny>1)return null;return{x:nx*vw,y:ny*vh};}
 (function(){var v=$('video');var down=false,lastP=null,lastMove=0;v.style.touchAction='none';
   v.addEventListener('pointerdown',function(e){down=true;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:0,x:p.x,y:p.y});}e.preventDefault();});
@@ -67,15 +122,17 @@ function vidToDisp(cx,cy){var v=$('video');var r=v.getBoundingClientRect();var v
   v.addEventListener('pointerup',function(e){down=false;var p=vidToDisp(e.clientX,e.clientY)||lastP;if(p)send('touch',{a:1,x:p.x,y:p.y});});
   v.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y});down=false;});
 })();
+
 var readyTimer=null;
 function startReady(){if(readyTimer)return;send('ready',{});readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',{});},2000);}
 function stopReady(){if(readyTimer){clearInterval(readyTimer);readyTimer=null;}}
 async function connect(room){
-  st('방 입장: '+room);
+  st('방 입장');$('status').style.display='block';$('changecode').style.display='block';
   sb=window.supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:20}}});
   channel=sb.channel(room,{config:{broadcast:{self:false,ack:false}}});
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
     .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
+    .on('broadcast',{event:'apps'},function(m){onApps(m.payload)})
     .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');startReady();}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
 }
 function startWithCode(code){
@@ -92,6 +149,7 @@ function showInput(){
   inp.onkeydown=function(e){if(e.key==='Enter')startWithCode(inp.value)};
 }
 $('changecode').onclick=function(){try{localStorage.removeItem('tevue_code')}catch(_){}location.reload();};
+clock();setInterval(clock,15000);
 (function(){
   var q=new URLSearchParams(location.search).get('r');
   var saved=null;try{saved=localStorage.getItem('tevue_code')}catch(_){}
