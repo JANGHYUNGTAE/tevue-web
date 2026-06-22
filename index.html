@@ -32,8 +32,8 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 #drawerGrid{display:flex;flex-wrap:wrap;gap:24px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
 #drawerClose{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:13;background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:22px;padding:10px 30px;font-size:15px}
 /* 홈/상태/코드변경 */
-#navbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:11;display:none;gap:14px}
-#navbar.show{display:flex}
+/* 하단중앙 back/home 핀 제거 — 네이티브 DeX 로 충분(사용자 요청). */
+#navbar,#navbar.show{display:none!important}
 #navbar button{width:54px;height:54px;border-radius:50%;background:rgba(13,17,23,.85);border:1px solid #30363d;color:#e6edf3;font-size:22px}
 #status{position:fixed;top:10px;left:10px;z-index:21;background:rgba(13,17,23,.6);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
 #changecode{position:fixed;top:10px;right:10px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
@@ -151,6 +151,7 @@ async function connect(room){
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
     .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
     .on('broadcast',{event:'apps'},function(m){onApps(m.payload)})
+    .on('broadcast',{event:'app-launched'},function(){showVideo()}) // A 그리드서 실행해도 영상 전환
     .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');startReady();}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
 }
 function startWithCode(code){
