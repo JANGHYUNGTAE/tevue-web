@@ -25,7 +25,7 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
   <div class="dots" id="dots"><span></span><span></span><span></span></div>
   <div id="codebox" style="display:none;margin-top:6px">
     <div class="hint" style="margin-bottom:10px">폰 화면의 코드를 입력하세요 (최초 1회)</div>
-    <input id="codeinput" maxlength="6" autocapitalize="characters" autocomplete="off"
+    <input id="codeinput" maxlength="4" autocapitalize="characters" autocomplete="off"
       style="font-size:30px;letter-spacing:8px;text-align:center;width:180px;padding:10px;border-radius:10px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;text-transform:uppercase"/>
     <div><button id="codebtn"
       style="margin-top:14px;font-size:18px;padding:10px 28px;border-radius:10px;border:0;background:#2f81f7;color:#fff;font-weight:700">연결</button></div>
@@ -57,16 +57,19 @@ function vidToDisp(cx,cy){var v=$('video');var r=v.getBoundingClientRect();var v
   v.addEventListener('pointerup',function(e){down=false;var p=vidToDisp(e.clientX,e.clientY)||lastP;if(p)send('touch',{a:1,x:p.x,y:p.y});});
   v.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y});down=false;});
 })();
+var readyTimer=null;
+function startReady(){if(readyTimer)return;send('ready',{});readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',{});},2000);}
+function stopReady(){if(readyTimer){clearInterval(readyTimer);readyTimer=null;}}
 async function connect(room){
   st('방 입장: '+room);
   sb=window.supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:20}}});
   channel=sb.channel(room,{config:{broadcast:{self:false,ack:false}}});
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
     .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
-    .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');send('ready',{});}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
+    .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');startReady();}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
 }
 function startWithCode(code){
-  code=(code||'').trim().toUpperCase();
+  code=(code||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toUpperCase();
   if(!code)return;
   try{localStorage.setItem('tevue_code',code)}catch(_){}
   $('codebox').style.display='none';$('dots').style.display='';$('msg').textContent='폰과 연결 중…';
