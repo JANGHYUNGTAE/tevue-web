@@ -71,7 +71,7 @@ var SB_KEY='sb_publishable_a6gOpIV7KMr7KWkcuzn1eQ_CQoJ7k5W';
 var $=function(i){return document.getElementById(i)};
 function st(t){$('status').textContent=t}
 var pc=null,channel=null,sb=null,apps=[],connected=false;
-var ICE=[{urls:'stun:stun.l.google.com:19302'}]; // 로컬 직접연결만(TURN 미사용 — 데이터 0)
+var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결, 인터넷 우회 차단(영상 데이터 0 보장)
 function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
 
 // ── 데스크톱 ──────────────────────────────────────────
