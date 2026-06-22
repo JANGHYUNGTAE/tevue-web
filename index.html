@@ -94,7 +94,7 @@ function hideDrawer(){$('drawer').classList.remove('show')}
 function launch(pkg){send('launch',{pkg:pkg});showVideo();}
 $('dock').onclick=showDrawer;
 $('drawerClose').onclick=hideDrawer;
-$('homebtn').onclick=function(){send('key',{code:3});showDesktop();}; // HOME=앱 백그라운드 + 웹 데스크톱이 삼성DeX 덮음
+$('homebtn').onclick=function(){showDesktop();}; // 홈=웹 데스크톱 표시(삼성 DeX 안 건드림). KEYCODE_HOME 주입 X(삼성DeX 노출 방지)
 $('backbtn').onclick=function(){send('key',{code:4});};
 
 // ── WebRTC ───────────────────────────────────────────
