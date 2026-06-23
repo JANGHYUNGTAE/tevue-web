@@ -4,43 +4,69 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <title>TeVue</title>
 <style>
-:root{--bg:#000;--txt:#e6edf3;--sub:#9aa4b2;--blue:#2f81f7}
-*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
+:root{--bg:#05070d;--txt:#eef2f7;--sub:#9aa4b2;--blue:#2f81f7;--glass:rgba(18,22,33,.62);--line:rgba(255,255,255,.10)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
 #video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none;z-index:5}
-/* 연결 패널 */
-#panel{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:#000}
+
+/* ── 연결 패널 ── */
+#panel{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,#15173a,#05070d 70%)}
 #panel.hidden{display:none}
-h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0 0 22px rgba(47,129,247,.6)}
+h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(--blue);text-shadow:0 0 26px rgba(47,129,247,.7)}
 .hint{color:var(--sub);font-size:15px;line-height:1.5}
 .dots span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin:0 3px;opacity:.3;animation:b 1.4s infinite}
 .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
 @keyframes b{0%,100%{opacity:.25}50%{opacity:1}}
-/* 데스크톱 */
-#desktop{position:fixed;inset:0;z-index:8;display:none;background:linear-gradient(165deg,#241a4d 0%,#4a2a8f 45%,#6d34c9 100%)}
+
+/* ── 홈(데스크톱) ── */
+#desktop{position:fixed;inset:0;z-index:8;display:none;background:linear-gradient(160deg,#10122e 0%,#241a4d 40%,#3d2a7a 75%,#5a34b0 100%)}
 #desktop.show{display:block}
-#desktop::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:radial-gradient(120% 100% at 50% 100%,rgba(124,58,237,.55),transparent 70%)}
-#topbar{position:absolute;top:14px;right:20px;left:20px;display:flex;justify-content:flex-end;align-items:center;color:#fff;font-size:14px;opacity:.85;font-weight:600}
-#apps{position:absolute;left:0;right:0;top:90px;display:flex;flex-wrap:wrap;gap:26px 30px;justify-content:center;align-content:flex-start;padding:0 40px}
-.app{width:96px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer}
-.app img{width:64px;height:64px;border-radius:18px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.35)}
-.app .nm{color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.4);max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.app:active{transform:scale(.92)}
-#dock{position:absolute;bottom:18px;right:18px;z-index:9;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.16);backdrop-filter:blur(8px);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center}
-/* 앱 서랍 */
-#drawer{position:fixed;inset:0;z-index:12;display:none;background:rgba(10,8,24,.92);backdrop-filter:blur(6px);padding:50px 32px 90px}
-#drawer.show{display:block}
-#drawerGrid{display:flex;flex-wrap:wrap;gap:24px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
-#drawerClose{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:13;background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:22px;padding:10px 30px;font-size:15px}
-/* 전체 DeX 전용 — 자체 nav 제거(사용자 결정). 차 화면은 순수 DeX, 네비는 DeX 작업표시줄 사용. */
-#navbar,#navbar.show{display:none!important}
-#status{position:fixed;top:10px;left:10px;z-index:21;background:rgba(13,17,23,.6);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
-#changecode{position:fixed;top:10px;right:10px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
-#calibrate{position:fixed;top:10px;right:104px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
-#calbox{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+#desktop::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:radial-gradient(120% 100% at 50% 120%,rgba(124,58,237,.5),transparent 72%);pointer-events:none}
+#hometop{position:absolute;top:30px;left:48px;z-index:2}
+#homeclock{font-size:60px;font-weight:800;line-height:1;letter-spacing:-1px}
+#homedate{color:rgba(255,255,255,.7);font-size:16px;margin-top:6px;font-weight:600}
+#apps{position:absolute;left:0;right:0;top:170px;bottom:96px;display:flex;flex-wrap:wrap;gap:22px 30px;justify-content:center;align-content:flex-start;padding:0 48px;overflow-y:auto}
+.app{width:104px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer}
+.app img{width:68px;height:68px;border-radius:20px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.4);object-fit:cover}
+.app .ph{width:68px;height:68px;border-radius:20px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:30px}
+.app .nm{color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5);max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app.sel img,.app.sel .ph{outline:3px solid var(--blue);outline-offset:3px}
+.app:active{transform:scale(.9)}
+
+/* ── 작업표시줄(하단, 미러링 중 상시) ── */
+#taskbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:30;display:none;align-items:center;gap:6px;
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:20px;padding:8px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+#taskbar.show{display:flex}
+.tbtn{width:50px;height:50px;border-radius:14px;border:0;background:rgba(255,255,255,.08);color:#fff;font-size:21px;display:flex;align-items:center;justify-content:center}
+.tbtn:active{background:rgba(255,255,255,.2)}
+.tbtn.accent{background:var(--blue)}
+#tbsep{width:1px;height:30px;background:var(--line);margin:0 4px}
+#tbinfo{display:flex;flex-direction:column;align-items:flex-end;padding:0 8px 0 4px;min-width:64px}
+#tbclock{font-size:16px;font-weight:700;line-height:1.1}
+#tbconn{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-top:2px}
+#tbdot{width:7px;height:7px;border-radius:50%;background:#2ea043}
+
+/* ── 앱 서랍 / 전환기 ── */
+.sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(6,8,14,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:40px 36px 110px}
+.sheet.show{display:block}
+.sheettitle{color:#fff;font-size:20px;font-weight:700;text-align:center;margin-bottom:22px}
+#drawerGrid,#switchGrid{display:flex;flex-wrap:wrap;gap:22px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
+.card{width:150px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer}
+.card .thumb{width:150px;height:90px;border-radius:14px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+.card .thumb img{width:50px;height:50px;border-radius:14px}
+.card .nm{color:#fff;font-size:13px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheetclose{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:41;background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:24px;padding:12px 36px;font-size:16px}
+#splithint{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);z-index:41;color:var(--blue);font-size:14px;font-weight:600;display:none}
+
+/* ── 보조(코드/보정) ── */
+#status{position:fixed;top:8px;left:8px;z-index:55;background:rgba(13,17,23,.5);border-radius:8px;padding:4px 9px;font-size:10px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
+#changecode,#calibrate{position:fixed;top:10px;z-index:55;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
+#changecode{right:10px}#calibrate{right:104px}
+#calbox{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
 #calbox.show{display:flex}
-#calmsg{color:#e6edf3;font-size:22px;text-align:center;line-height:1.5}
-#calcancel{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 20px;color:#e6edf3;font-size:14px}
-.caldot{position:fixed;width:46px;height:46px;border:3px solid #2f81f7;border-radius:50%;transform:translate(-50%,-50%);z-index:41;pointer-events:none;box-shadow:0 0 12px #2f81f7}
+#calmsg{color:#eef2f7;font-size:22px;text-align:center;line-height:1.5;white-space:pre-line}
+#calcancel{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 20px;color:#eef2f7;font-size:14px}
+.caldot{position:fixed;width:46px;height:46px;border:3px solid var(--blue);border-radius:50%;transform:translate(-50%,-50%);z-index:71;pointer-events:none;box-shadow:0 0 12px var(--blue)}
 </style></head>
 <body>
 <video id="video" autoplay playsinline></video>
@@ -49,14 +75,33 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 <button id="calibrate">⚙ 화면보정</button>
 <div id="calbox"><div id="calmsg"></div><button id="calcancel">취소</button></div>
 
+<!-- 홈 -->
 <div id="desktop">
-  <div id="topbar"><span id="clock"></span></div>
+  <div id="hometop"><div id="homeclock"></div><div id="homedate"></div></div>
   <div id="apps"></div>
-  <button id="dock">▦</button>
 </div>
-<div id="drawer"><div id="drawerGrid"></div><button id="drawerClose">닫기</button></div>
-<div id="navbar"><button id="backbtn" title="뒤로">‹</button><button id="homebtn" title="홈">⌂</button><button id="appsbtn" title="앱전환">▦</button></div>
 
+<!-- 앱 서랍(전체 앱) -->
+<div id="drawer" class="sheet"><div class="sheettitle">전체 앱</div><div id="drawerGrid"></div>
+  <div id="splithint">화면분할: 앱 2개를 선택하세요</div>
+  <button id="drawerClose" class="sheetclose">닫기</button></div>
+
+<!-- 앱 전환기(최근앱) -->
+<div id="switcher" class="sheet"><div class="sheettitle">최근 앱</div><div id="switchGrid"></div>
+  <button id="switchClose" class="sheetclose">닫기</button></div>
+
+<!-- 작업표시줄 -->
+<div id="taskbar">
+  <button class="tbtn" id="tbHome" title="홈">⌂</button>
+  <button class="tbtn" id="tbBack" title="뒤로">‹</button>
+  <button class="tbtn" id="tbRecent" title="최근앱">▣</button>
+  <button class="tbtn" id="tbApps" title="전체앱">⊞</button>
+  <button class="tbtn" id="tbSplit" title="화면분할">◫</button>
+  <div id="tbsep"></div>
+  <div id="tbinfo"><div id="tbclock"></div><div id="tbconn"><span id="tbdot"></span><span id="tbqual">—</span></div></div>
+</div>
+
+<!-- 연결 패널 -->
 <div id="panel">
   <h1>Te<span class="v">V</span>ue</h1>
   <div class="hint" id="msg">폰과 연결 중…</div>
@@ -64,7 +109,7 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
   <div id="codebox" style="display:none;margin-top:6px">
     <div class="hint" style="margin-bottom:10px">폰 화면의 코드를 입력하세요 (최초 1회)</div>
     <input id="codeinput" maxlength="4" autocapitalize="characters" autocomplete="off"
-      style="font-size:30px;letter-spacing:8px;text-align:center;width:180px;padding:10px;border-radius:10px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;text-transform:uppercase"/>
+      style="font-size:30px;letter-spacing:8px;text-align:center;width:180px;padding:10px;border-radius:10px;border:1px solid #30363d;background:#0d1117;color:#eef2f7;text-transform:uppercase"/>
     <div><button id="codebtn"
       style="margin-top:14px;font-size:18px;padding:10px 28px;border-radius:10px;border:0;background:#2f81f7;color:#fff;font-weight:700">연결</button></div>
   </div>
@@ -77,53 +122,113 @@ var SB_KEY='sb_publishable_a6gOpIV7KMr7KWkcuzn1eQ_CQoJ7k5W';
 var $=function(i){return document.getElementById(i)};
 function st(t){$('status').textContent=t}
 var pc=null,channel=null,sb=null,apps=[],connected=false;
-var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결, 인터넷 우회 차단(영상 데이터 0 보장)
-var dispW=0,dispH=0; // 가상디스플레이 실제 픽셀(offer 로 받음) — 터치 좌표 정확도
-var cal=null; // 화면 보정 rect{x,y,w,h} — 차 브라우저 크롬 가림 보정(차마다 저장)
+var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결(영상 데이터 0)
+var dispW=0,dispH=0; // 가상디스플레이 실제 픽셀(offer) — 터치 좌표
+var cal=null; // 화면 보정 rect{x,y,w,h}
+var recents=[]; // 우리가 띄운 앱(pkg) 최근순 — 자체 앱전환기(삼성 recents 가 폰기준이라 대체)
+var splitMode=false,splitSel=[]; // 화면분할 2앱 선택
 function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
-
-// ── 데스크톱 ──────────────────────────────────────────
-function clock(){var d=new Date();$('clock').textContent=(''+d.getHours()).padStart(2,'0')+':'+(''+d.getMinutes()).padStart(2,'0')}
 function iconSrc(ic){return ic?(ic.indexOf('data:')===0?ic:'data:image/png;base64,'+ic):''}
+function appByPkg(p){for(var i=0;i<apps.length;i++)if(apps[i].pkg===p)return apps[i];return null;}
+
+// ── 시계 ──
+function two(n){return (''+n).padStart(2,'0')}
+function clock(){var d=new Date();var hm=two(d.getHours())+':'+two(d.getMinutes());$('homeclock').textContent=hm;$('tbclock').textContent=hm;
+  var wd=['일','월','화','수','목','금','토'][d.getDay()];$('homedate').textContent=(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+wd+')';}
+
+// ── 홈 앱 그리드 ──
 function appEl(a){
   var d=document.createElement('div');d.className='app';
-  d.innerHTML='<img src="'+iconSrc(a.icon)+'"/><div class="nm">'+a.label+'</div>';
-  d.onclick=function(){launch(a.pkg)};
+  var ic=iconSrc(a.icon);
+  d.innerHTML=(ic?'<img src="'+ic+'"/>':'<div class="ph">▦</div>')+'<div class="nm">'+a.label+'</div>';
+  d.onclick=function(){onAppTap(a.pkg);};
   return d;
 }
 function renderApps(){
   var g=$('apps');g.innerHTML='';apps.forEach(function(a){g.appendChild(appEl(a))});
-  var dg=$('drawerGrid');dg.innerHTML='';apps.forEach(function(a){dg.appendChild(appEl(a))});
+  var dg=$('drawerGrid');dg.innerHTML='';apps.forEach(function(a){var e=appEl(a);e.dataset.pkg=a.pkg;dg.appendChild(e)});
+  renderSwitch();
 }
-function showDesktop(){connected=true;$('panel').classList.add('hidden');$('desktop').classList.add('show');hideDrawer();$('video').style.display='none';$('navbar').classList.remove('show');}
-function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');hideDrawer();$('video').style.display='block';applyCal();$('navbar').classList.add('show');}
-function showDrawer(){$('drawer').classList.add('show')}
-function hideDrawer(){$('drawer').classList.remove('show')}
-function launch(pkg){send('launch',{pkg:pkg});showVideo();}
-$('dock').onclick=showDrawer;
-$('drawerClose').onclick=hideDrawer;
-$('homebtn').onclick=function(){send('home');showVideo();}; // 홈=네이티브 DeX 홈(SECONDARY_HOME) — DeX 통일
-$('backbtn').onclick=function(){send('key',{code:4});};
-$('appsbtn').onclick=function(){showDrawer();}; // 앱전환(영상 위 앱목록 — 삼성 DeX recents 대체, 차 화면 기준)
+function onAppTap(pkg){
+  if(splitMode){toggleSplitPick(pkg);return;}
+  launch(pkg);
+}
 
-// ── WebRTC ───────────────────────────────────────────
+// ── 화면 전환 ──
+function showHome(){connected=true;$('panel').classList.add('hidden');$('video').style.display='none';
+  $('desktop').classList.add('show');closeSheets();$('taskbar').classList.add('show');}
+function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');closeSheets();
+  $('video').style.display='block';applyCal();$('taskbar').classList.add('show');}
+function closeSheets(){$('drawer').classList.remove('show');$('switcher').classList.remove('show');exitSplit();}
+
+function launch(pkg){
+  recents=[pkg].concat(recents.filter(function(p){return p!==pkg}));
+  send('launch',{pkg:pkg});showVideo();renderSwitch();
+}
+
+// ── 전체 앱 서랍 ──
+function openDrawer(){$('drawer').classList.add('show');$('desktop').classList.remove('show');}
+// ── 최근앱 전환기 ──
+function renderSwitch(){
+  var g=$('switchGrid');if(!g)return;g.innerHTML='';
+  if(!recents.length){g.innerHTML='<div class="hint">아직 실행한 앱이 없어요</div>';return;}
+  recents.forEach(function(pkg){
+    var a=appByPkg(pkg);if(!a)return;var ic=iconSrc(a.icon);
+    var c=document.createElement('div');c.className='card';
+    c.innerHTML='<div class="thumb">'+(ic?'<img src="'+ic+'"/>':'▦')+'</div><div class="nm">'+a.label+'</div>';
+    c.onclick=function(){launch(pkg);};
+    g.appendChild(c);
+  });
+}
+function openSwitcher(){renderSwitch();$('switcher').classList.add('show');$('desktop').classList.remove('show');}
+
+// ── 화면분할 ──
+function enterSplit(){splitMode=true;splitSel=[];$('splithint').style.display='block';openDrawer();updateSplitSel();}
+function exitSplit(){splitMode=false;splitSel=[];$('splithint').style.display='none';updateSplitSel();}
+function toggleSplitPick(pkg){
+  var i=splitSel.indexOf(pkg);
+  if(i>=0)splitSel.splice(i,1);else if(splitSel.length<2)splitSel.push(pkg);
+  if(splitSel.length===2){var a=splitSel[0],b=splitSel[1];send('split',{a:a,b:b});recents=[a,b].concat(recents.filter(function(p){return p!==a&&p!==b}));exitSplit();showVideo();renderSwitch();return;}
+  updateSplitSel();
+}
+function updateSplitSel(){
+  var els=$('drawerGrid').children;for(var i=0;i<els.length;i++){var pk=els[i].dataset.pkg;els[i].classList.toggle('sel',splitMode&&splitSel.indexOf(pk)>=0);}
+  $('splithint').textContent=splitMode?('화면분할: 앱 2개 선택 ('+splitSel.length+'/2)'):'';
+}
+
+// ── 작업표시줄 버튼 ──
+$('tbHome').onclick=showHome;
+$('tbBack').onclick=function(){send('key',{code:4});};
+$('tbRecent').onclick=openSwitcher;
+$('tbApps').onclick=function(){exitSplit();openDrawer();};
+$('tbSplit').onclick=enterSplit;
+$('drawerClose').onclick=function(){exitSplit();$('drawer').classList.remove('show');if(!videoOn())showHome();};
+$('switchClose').onclick=function(){$('switcher').classList.remove('show');if(!videoOn())showHome();};
+function videoOn(){return $('video').style.display==='block';}
+
+// ── 연결 품질(폰이 'stats' 브로드캐스트) ──
+function onStats(p){
+  if(!p)return;var mbps=(p.kbps||0)/1000,rtt=p.rtt||0;
+  $('tbqual').textContent=mbps.toFixed(1)+'M·'+rtt+'ms';
+  $('tbdot').style.background=mbps>=6?'#2ea043':mbps>=2?'#d29922':'#f85149';
+}
+
+// ── WebRTC ──
 var connectWatch=null,connTries=0;
-function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');showVideo();} // DeX 네이티브 화면 바로 표시(우리 웹홈 X)
+function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');showHome();}
 function armWatchdog(){
   if(connectWatch)clearTimeout(connectWatch);
   connectWatch=setTimeout(function(){
     if(connected)return;
     if(connTries<3){connTries++;st('재연결 '+connTries);resetForReconnect();}
-    else{$('msg').textContent='연결 실패 — 네트워크/핫스팟 확인 후 재시도'; $('panel').classList.remove('hidden');}
+    else{$('msg').textContent='연결 실패 — 네트워크/핫스팟 확인 후 재시도';$('panel').classList.remove('hidden');}
   },12000);
 }
 function newPc(){
   pc=new RTCPeerConnection({iceServers:ICE});
-  // ontrack 은 연결 증거가 아님(offer 파싱 시 발생) → srcObject 만. 실제 연결은 connectionstate.
   pc.ontrack=function(e){$('video').srcObject=e.streams[0];};
   pc.onicecandidate=function(e){if(e.candidate)send('ice',{from:'receiver',candidate:{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}})};
   pc.onconnectionstatechange=function(){var s=pc.connectionState;st('P2P:'+s);if(s==='connected')onConnected();else if(s==='failed'||s==='closed')resetForReconnect();};
-  // 테슬라 브라우저는 connectionState 가 안 올 수 있어 iceConnectionState 로도 연결 판정.
   pc.oniceconnectionstatechange=function(){var s=pc.iceConnectionState;if(s==='connected'||s==='completed')onConnected();else if(s==='failed')resetForReconnect();};
 }
 var pendingIce=[],remoteSet=false,answered=false;
@@ -131,7 +236,7 @@ function resetForReconnect(){
   try{if(pc)pc.close()}catch(_){}
   pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;
   try{$('video').srcObject=null}catch(_){}
-  $('video').style.display='none';$('desktop').classList.remove('show');$('navbar').classList.remove('show');
+  $('video').style.display='none';$('desktop').classList.remove('show');$('taskbar').classList.remove('show');closeSheets();
   $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
   startReady();
 }
@@ -139,7 +244,7 @@ async function onOffer(p){if(answered)return;answered=true;try{if(p.display){dis
 async function onIce(p){if(p.from==='receiver'||!p.candidate)return;if(!pc||!remoteSet){pendingIce.push(p.candidate);return;}try{await pc.addIceCandidate(p.candidate)}catch(_){}}
 function onApps(p){if(p&&p.apps){apps=p.apps;renderApps();}}
 
-// ── 터치(영상=실행중인 앱) ───────────────────────────
+// ── 터치(영상=실행중인 앱) ──
 function vidToDisp(cx,cy){var v=$('video'),r=v.getBoundingClientRect();var iw=dispW||v.videoWidth,ih=dispH||v.videoHeight;if(!iw||!ih||!r.width||!r.height)return null;var s=Math.min(r.width/iw,r.height/ih);var dw=iw*s,dh=ih*s;var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;var x=(cx-ox)/s,y=(cy-oy)/s;if(x<0||x>iw||y<0||y>ih)return null;return{x:x,y:y};}
 (function(){var v=$('video');var down=false,lastP=null,lastMove=0;v.style.touchAction='none';
   v.addEventListener('pointerdown',function(e){down=true;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:0,x:p.x,y:p.y});}e.preventDefault();});
@@ -148,19 +253,17 @@ function vidToDisp(cx,cy){var v=$('video'),r=v.getBoundingClientRect();var iw=di
   v.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y});down=false;});
 })();
 
-// 테슬라 브라우저 상/하단 크롬이 화면을 가림 → 첫 사용자 탭에서 풀스크린 시도(지원 시). best-effort.
+// 테슬라 브라우저 크롬 → 첫 탭 풀스크린(best-effort)
 var fsTried=false;
 function tryFullscreen(){if(fsTried)return;fsTried=true;var el=document.documentElement;var fn=el.requestFullscreen||el.webkitRequestFullscreen;if(fn){try{var r=fn.call(el);if(r&&r.catch)r.catch(function(){});}catch(_){}}}
 document.addEventListener('pointerdown',tryFullscreen,{once:false});
 var readyTimer=null;
-// 차 실제 가시영역(visualViewport=브라우저 크롬 제외) + dpr → 폰이 그 크기×dpr 로 디스플레이 생성(짤림X, 선명).
 function vpSize(){var vv=window.visualViewport;return {w:Math.round((vv&&vv.width)||window.innerWidth),h:Math.round((vv&&vv.height)||window.innerHeight)};}
 function readyMsg(){var d=Math.min(3,Math.max(1,window.devicePixelRatio||1));if(cal&&cal.w>40&&cal.h>40)return {w:cal.w,h:cal.h,dpr:d};var s=vpSize();return {w:s.w,h:s.h,dpr:d};}
 function startReady(){if(readyTimer)return;send('ready',readyMsg());readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',readyMsg());},2000);}
 function stopReady(){if(readyTimer){clearInterval(readyTimer);readyTimer=null;}}
 async function connect(room){
   st('방 입장');$('status').style.display='block';
-  // 코드 변경 버튼은 처음 10초만 표시 후 자동 숨김(이미 저장된 코드면 거슬리지 않게).
   $('changecode').style.display='block';$('calibrate').style.display='block';
   setTimeout(function(){$('changecode').style.display='none';$('calibrate').style.display='none';},10000);
   sb=window.supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:20}}});
@@ -168,14 +271,15 @@ async function connect(room){
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
     .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
     .on('broadcast',{event:'apps'},function(m){onApps(m.payload)})
-    .on('broadcast',{event:'app-launched'},function(){showVideo()}) // A 그리드서 실행해도 영상 전환
+    .on('broadcast',{event:'app-launched'},function(){showVideo()})
+    .on('broadcast',{event:'stats'},function(m){onStats(m.payload)})
     .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');startReady();}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
 }
 function startWithCode(code){
   code=(code||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toUpperCase();
   if(!code)return;
   try{localStorage.setItem('tevue_code',code)}catch(_){}
-  curCode=code;loadCal(); // 이 차의 화면보정 적용
+  curCode=code;loadCal();
   $('codebox').style.display='none';$('dots').style.display='';$('msg').textContent='폰과 연결 중…';
   connect('tevue:'+code);
 }
@@ -186,7 +290,8 @@ function showInput(){
   inp.onkeydown=function(e){if(e.key==='Enter')startWithCode(inp.value)};
 }
 $('changecode').onclick=function(){try{localStorage.removeItem('tevue_code')}catch(_){}location.reload();};
-// 화면 보정: 차 브라우저 크롬이 가린 영역 제외, 실제 보이는 영역을 코너 2탭으로 지정(차마다 1회).
+
+// ── 화면 보정(코너 2탭) ──
 var curCode='';
 function calKey(){return 'tevue_cal_'+(curCode||'');}
 function loadCal(){try{var s=localStorage.getItem(calKey());cal=s?JSON.parse(s):null;}catch(_){cal=null;}applyCal();}
@@ -198,7 +303,7 @@ function startCal(){calStep=1;calTL=null;clearDots();$('calbox').classList.add('
 function endCal(){$('calbox').classList.remove('show');clearDots();calStep=0;}
 $('calbox').addEventListener('pointerdown',function(e){
   if(calStep===0)return;
-  if(e.target&&e.target.id==='calcancel'){endCal();return;} // 취소 버튼은 코너탭으로 먹지 않게
+  if(e.target&&e.target.id==='calcancel'){endCal();return;}
   e.preventDefault();e.stopPropagation();
   if(calStep===1){calTL={x:e.clientX,y:e.clientY};dot(e.clientX,e.clientY);calStep=2;$('calmsg').textContent='② 우측 하단 모서리를 탭';}
   else if(calStep===2){
