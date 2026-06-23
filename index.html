@@ -45,6 +45,10 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #tbclock{font-size:16px;font-weight:700;line-height:1.1}
 #tbconn{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-top:2px}
 #tbdot{width:7px;height:7px;border-radius:50%;background:#2ea043}
+/* 작업표시줄 꺼내는 손잡이(앱 실행 중 표시줄 숨겼을 때) */
+#tbgrab{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:29;width:120px;height:24px;display:none;align-items:flex-end;justify-content:center;padding-bottom:5px}
+#tbgrab.show{display:flex}
+#tbgrab::after{content:"";width:54px;height:5px;border-radius:3px;background:rgba(255,255,255,.45)}
 
 /* ── 앱 서랍 / 전환기 ── */
 .sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(6,8,14,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:40px 36px 110px}
@@ -100,6 +104,7 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
   <div id="tbsep"></div>
   <div id="tbinfo"><div id="tbclock"></div><div id="tbconn"><span id="tbdot"></span><span id="tbqual">—</span></div></div>
 </div>
+<div id="tbgrab"></div>
 
 <!-- 연결 패널 -->
 <div id="panel">
@@ -155,10 +160,18 @@ function onAppTap(pkg){
 }
 
 // ── 화면 전환 ──
+// 작업표시줄: 홈에선 상시, 앱 실행 중엔 잠깐 보이고 자동숨김(손잡이 탭으로 다시 꺼냄).
+var tbTimer=null;
+function taskbarShow(temp){
+  $('taskbar').classList.add('show');$('tbgrab').classList.remove('show');
+  if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}
+  if(temp){tbTimer=setTimeout(function(){$('taskbar').classList.remove('show');if(videoOn())$('tbgrab').classList.add('show');},4000);}
+}
+function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('taskbar').classList.remove('show');$('tbgrab').classList.remove('show');}
 function showHome(){connected=true;$('panel').classList.add('hidden');$('video').style.display='none';
-  $('desktop').classList.add('show');closeSheets();$('taskbar').classList.add('show');}
+  $('desktop').classList.add('show');closeSheets();taskbarShow(false);}
 function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');closeSheets();
-  $('video').style.display='block';applyCal();$('taskbar').classList.add('show');}
+  $('video').style.display='block';applyCal();taskbarShow(true);}
 function closeSheets(){$('drawer').classList.remove('show');$('switcher').classList.remove('show');exitSplit();}
 
 function launch(pkg){
@@ -202,6 +215,7 @@ $('tbBack').onclick=function(){send('key',{code:4});};
 $('tbRecent').onclick=openSwitcher;
 $('tbApps').onclick=function(){exitSplit();openDrawer();};
 $('tbSplit').onclick=enterSplit;
+$('tbgrab').onclick=function(){taskbarShow(true);};
 $('drawerClose').onclick=function(){exitSplit();$('drawer').classList.remove('show');if(!videoOn())showHome();};
 $('switchClose').onclick=function(){$('switcher').classList.remove('show');if(!videoOn())showHome();};
 function videoOn(){return $('video').style.display==='block';}
@@ -236,7 +250,7 @@ function resetForReconnect(){
   try{if(pc)pc.close()}catch(_){}
   pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;
   try{$('video').srcObject=null}catch(_){}
-  $('video').style.display='none';$('desktop').classList.remove('show');$('taskbar').classList.remove('show');closeSheets();
+  $('video').style.display='none';$('desktop').classList.remove('show');taskbarHideAll();closeSheets();
   $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
   startReady();
 }
