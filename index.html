@@ -47,6 +47,13 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 .htile .nm{color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5);max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .htile:active{transform:scale(.92)}
 .htile.merge .ic{outline:3px solid var(--blue);outline-offset:3px}
+/* 인라인 SVG 아이콘 사이즈(테슬라서 유니코드 글리프 깨짐 → SVG로 대체) */
+.tbtn svg{width:26px;height:26px}
+#menufab svg{width:28px;height:28px}
+.ic.ph svg{width:54%;height:54%;opacity:.5;stroke:#fff}
+#trash svg{width:22px;height:22px;vertical-align:-4px;margin-right:6px}
+.del svg{width:20px;height:20px}
+.thumb svg{width:46px;height:46px;opacity:.5;stroke:#fff}
 #desktop.edit .htile{animation:wig .3s infinite}
 @keyframes wig{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
 #desktop.edit .htile .del{display:flex}
@@ -126,12 +133,12 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 <!-- 홈 -->
 <div id="desktop">
   <div id="hometop"><div id="homeclock"></div><div id="homedate"></div></div>
-  <div id="homehint">우측 하단 <b>≡</b> 버튼을 눌러 전체 앱에서 길게 눌러 홈으로 끌어다 놓으세요.<br>앱을 다른 앱 위에 올리면 좌우 분할 아이콘이 됩니다.</div>
+  <div id="homehint">우측 하단 <b>메뉴 버튼</b>을 눌러 전체 앱에서 길게 눌러 홈으로 끌어다 놓으세요.<br>앱을 다른 앱 위에 올리면 좌우 분할 아이콘이 됩니다.</div>
   <div id="homegrid"></div>
 </div>
 
 <!-- 휴지통(편집 모드) -->
-<div id="trash">🗑  여기로 끌어 삭제</div>
+<div id="trash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>여기로 끌어 삭제</div>
 
 <!-- 드래그 고스트 -->
 <div id="ghostlayer"></div>
@@ -148,14 +155,14 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 
 <!-- 작업표시줄 -->
 <div id="taskbar">
-  <button class="tbtn" id="tbHome" title="홈">⌂</button>
-  <button class="tbtn" id="tbBack" title="뒤로">‹</button>
-  <button class="tbtn" id="tbRecent" title="최근앱">▣</button>
+  <button class="tbtn" id="tbHome" title="홈"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/></svg></button>
+  <button class="tbtn" id="tbBack" title="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="tbtn" id="tbRecent" title="최근앱"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg></button>
   <div id="tbsep"></div>
   <div id="tbinfo"><div id="tbclock"></div><div id="tbconn"><span id="tbdot"></span><span id="tbqual">—</span></div></div>
 </div>
 <!-- 우하단 반투명 메뉴 버튼 → 탭하면 하단 작업표시줄 표시 -->
-<div id="menufab">≡</div>
+<div id="menufab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></div>
 
 <!-- 연결 패널 -->
 <div id="panel">
@@ -177,6 +184,8 @@ var SB_URL='https://dvxnsmoneibdwzegualm.supabase.co';
 var SB_KEY='sb_publishable_a6gOpIV7KMr7KWkcuzn1eQ_CQoJ7k5W';
 var $=function(i){return document.getElementById(i)};
 function st(t){$('status').textContent=t}
+// 앱 아이콘 없을 때 플레이스홀더(테슬라서 ▦ 글리프 깨짐 → SVG)
+var PH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M5 16l4-4 3 3 3-3 4 4"/><circle cx="9.5" cy="9.5" r="1.4" fill="currentColor" stroke="none"/></svg>';
 var pc=null,channel=null,sb=null,apps=[],connected=false,ctrlDc=null;
 var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결(영상 데이터 0)
 var dispW=0,dispH=0; // 단일/좌 디스플레이 픽셀(터치 좌표)
@@ -200,11 +209,11 @@ function loadHome(){try{var s=localStorage.getItem(homeKey());home=s?JSON.parse(
 function saveHome(){try{localStorage.setItem(homeKey(),JSON.stringify(home));}catch(_){}}
 
 // 아이콘 내부 HTML
-function appIcHtml(pkg){var a=appByPkg(pkg);var ic=a?iconSrc(a.icon):'';return ic?'<img src="'+ic+'"/>':'▦';}
+function appIcHtml(pkg){var a=appByPkg(pkg);var ic=a?iconSrc(a.icon):'';return ic?'<img src="'+ic+'"/>':PH;}
 function tileIcHtml(item){
   if(item.t==='s')return '<div class="ic split"><img src="'+(appByPkg(item.l)&&iconSrc(appByPkg(item.l).icon)||'')+'"/><img src="'+(appByPkg(item.r)&&iconSrc(appByPkg(item.r).icon)||'')+'"/></div>';
   var a=appByPkg(item.pkg);var ic=a?iconSrc(a.icon):'';
-  return ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">▦</div>';
+  return ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">'+PH+'</div>';
 }
 function tileName(item){
   if(item.t==='s'){var l=appByPkg(item.l),r=appByPkg(item.r);return (l?l.label:'?')+' | '+(r?r.label:'?');}
@@ -231,7 +240,7 @@ function renderDrawer(){
   list.forEach(function(a){
     var t=document.createElement('div');t.className='dapp';t.dataset.pkg=a.pkg;
     var ic=iconSrc(a.icon);
-    t.innerHTML=(ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">▦</div>')+'<div class="nm">'+a.label+'</div>';
+    t.innerHTML=(ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">'+PH+'</div>')+'<div class="nm">'+a.label+'</div>';
     bindDrawerTile(t,a);
     g.appendChild(t);
   });
@@ -281,7 +290,7 @@ function renderSwitch(){
   recents.forEach(function(pkg){
     var a=appByPkg(pkg);if(!a)return;var ic=iconSrc(a.icon);
     var c=document.createElement('div');c.className='card';
-    c.innerHTML='<div class="thumb">'+(ic?'<img src="'+ic+'"/>':'▦')+'</div><div class="nm">'+a.label+'</div>';
+    c.innerHTML='<div class="thumb">'+(ic?'<img src="'+ic+'"/>':PH)+'</div><div class="nm">'+a.label+'</div>';
     c.onclick=function(){launch(pkg);};
     g.appendChild(c);
   });
@@ -290,6 +299,13 @@ function openSwitcher(){renderSwitch();$('switcher').classList.add('show');$('de
 
 // ── 편집 모드 ──
 function setEdit(v){$('desktop').classList.toggle('edit',v);}
+// 편집모드에서 아이콘 바깥 바탕 탭 → 편집 취소(캡처 단계: 타일/삭제버튼이면 통과)
+$('desktop').addEventListener('pointerdown',function(e){
+  if(!$('desktop').classList.contains('edit'))return;
+  if(e.target&&e.target.classList&&e.target.classList.contains('del'))return;
+  if(homeTileAt(e.clientX,e.clientY))return; // 아이콘 위면 타일 핸들러가 처리
+  setEdit(false);
+},true);
 
 // ── 드래그 앤 드롭(독→홈 추가 / 합치기 / 홈 이동·삭제) ──
 var drag=null; // {item, fromHomeIdx(or -1), ghost, moved}
