@@ -49,6 +49,14 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #tbgrab{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:29;width:120px;height:24px;display:none;align-items:flex-end;justify-content:center;padding-bottom:5px}
 #tbgrab.show{display:flex}
 #tbgrab::after{content:"";width:54px;height:5px;border-radius:3px;background:rgba(255,255,255,.45)}
+/* 좌측 엣지 스와이프 → 세로 사이드 메뉴 */
+#edgezone{position:fixed;left:0;top:0;bottom:0;width:22px;z-index:28;pointer-events:none;touch-action:none}
+#edgehint{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:27;width:5px;height:60px;border-radius:0 4px 4px 0;background:rgba(124,58,237,.5);display:none}
+#edgehint.show{display:block}
+#sideback{position:fixed;inset:0;z-index:30;display:none}
+#sideback.show{display:block}
+#sidemenu{position:fixed;left:0;top:0;bottom:0;z-index:31;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:0 14px;background:linear-gradient(90deg,rgba(13,17,23,.95),rgba(13,17,23,.55));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transform:translateX(-100%);transition:transform .2s ease}
+#sidemenu.show{transform:translateX(0)}
 
 /* ── 앱 서랍 / 전환기 ── */
 .sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(6,8,14,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:40px 36px 110px}
@@ -105,6 +113,18 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
   <div id="tbinfo"><div id="tbclock"></div><div id="tbconn"><span id="tbdot"></span><span id="tbqual">—</span></div></div>
 </div>
 <div id="tbgrab"></div>
+
+<!-- 좌측 엣지 스와이프 사이드 메뉴 -->
+<div id="edgehint"></div>
+<div id="edgezone"></div>
+<div id="sideback"></div>
+<div id="sidemenu">
+  <button class="tbtn" id="smHome" title="홈">⌂</button>
+  <button class="tbtn" id="smBack" title="뒤로">‹</button>
+  <button class="tbtn" id="smRecent" title="최근앱">▣</button>
+  <button class="tbtn" id="smApps" title="전체앱">⊞</button>
+  <button class="tbtn" id="smSplit" title="화면분할">◫</button>
+</div>
 
 <!-- 연결 패널 -->
 <div id="panel">
@@ -169,10 +189,13 @@ function taskbarShow(temp){
 }
 function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('taskbar').classList.remove('show');$('tbgrab').classList.remove('show');}
 function showHome(){connected=true;$('panel').classList.add('hidden');$('video').style.display='none';
-  $('desktop').classList.add('show');closeSheets();taskbarShow(false);}
+  $('desktop').classList.add('show');closeSheets();taskbarShow(false);edgeActive(false);}
 function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');closeSheets();
-  $('video').style.display='block';applyCal();taskbarShow(true);}
-function closeSheets(){$('drawer').classList.remove('show');$('switcher').classList.remove('show');exitSplit();}
+  $('video').style.display='block';applyCal();taskbarShow(true);edgeActive(true);}
+function closeSheets(){$('drawer').classList.remove('show');$('switcher').classList.remove('show');exitSplit();sideShow(false);}
+// 좌측 엣지 스와이프 사이드 메뉴 (앱 실행 중에만 엣지존 활성)
+function edgeActive(v){$('edgezone').style.pointerEvents=v?'auto':'none';$('edgehint').classList.toggle('show',v);if(!v)sideShow(false);}
+function sideShow(v){$('sidemenu').classList.toggle('show',v);$('sideback').classList.toggle('show',v);}
 
 function launch(pkg){
   recents=[pkg].concat(recents.filter(function(p){return p!==pkg}));
@@ -216,6 +239,19 @@ $('tbRecent').onclick=openSwitcher;
 $('tbApps').onclick=function(){exitSplit();openDrawer();};
 $('tbSplit').onclick=enterSplit;
 $('tbgrab').onclick=function(){taskbarShow(true);};
+// ── 사이드 메뉴(좌측 엣지 스와이프) ──
+$('smHome').onclick=function(){sideShow(false);showHome();};
+$('smBack').onclick=function(){send('key',{code:4});};
+$('smRecent').onclick=function(){sideShow(false);openSwitcher();};
+$('smApps').onclick=function(){sideShow(false);exitSplit();openDrawer();};
+$('smSplit').onclick=function(){sideShow(false);enterSplit();};
+$('sideback').onclick=function(){sideShow(false);};
+(function(){var ez=$('edgezone'),sx=0,sy=0,tk=false;
+  ez.addEventListener('pointerdown',function(e){sx=e.clientX;sy=e.clientY;tk=true;});
+  ez.addEventListener('pointermove',function(e){if(!tk)return;if(e.clientX-sx>32&&Math.abs(e.clientY-sy)<70){tk=false;sideShow(true);}});
+  ez.addEventListener('pointerup',function(){tk=false;});
+  ez.addEventListener('pointercancel',function(){tk=false;});
+})();
 $('drawerClose').onclick=function(){exitSplit();$('drawer').classList.remove('show');if(!videoOn())showHome();};
 $('switchClose').onclick=function(){$('switcher').classList.remove('show');if(!videoOn())showHome();};
 function videoOn(){return $('video').style.display==='block';}
