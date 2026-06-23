@@ -507,8 +507,13 @@ async function onOffer(p){
 }
 async function onIce(p){if(p.from==='receiver'||!p.candidate)return;if(!pc||!remoteSet){pendingIce.push(p.candidate);return;}try{await pc.addIceCandidate(p.candidate)}catch(_){}}
 // 전체 앱 목록(라벨+pkg, 즉시) — 기존 아이콘 보존하며 교체.
-function onApplist(p){if(!p||!p.apps)return;var prev={};apps.forEach(function(a){if(a.icon)prev[a.pkg]=a.icon;});
-  apps=p.apps.map(function(a){return {label:a.label,pkg:a.pkg,icon:prev[a.pkg]||null};});renderApps();}
+var lastApplistSig='';
+function onApplist(p){if(!p||!p.apps)return;
+  var sig=p.apps.length+':'+(p.apps[0]&&p.apps[0].pkg||'')+(p.apps[p.apps.length-1]&&p.apps[p.apps.length-1].pkg||'');
+  var prev={};apps.forEach(function(a){if(a.icon)prev[a.pkg]=a.icon;});
+  apps=p.apps.map(function(a){return {label:a.label,pkg:a.pkg,icon:prev[a.pkg]||null};});
+  if(sig===lastApplistSig)return; // 동일 목록 재전송(핸드셰이크 중 2초마다) → 리렌더 스킵
+  lastApplistSig=sig;renderApps();}
 // 아이콘 청크(진행형) — 해당 앱에 채우고 디바운스 렌더.
 function onIcons(p){if(!p||!p.icons)return;var idx={};apps.forEach(function(a,i){idx[a.pkg]=i;});
   p.icons.forEach(function(it){var i=idx[it.pkg];if(i!=null)apps[i].icon=it.icon;});renderAppsDebounced();}
