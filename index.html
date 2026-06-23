@@ -416,7 +416,9 @@ function bindHomeTile(el,item,idx){
 }
 
 // ── 작업표시줄 버튼 + 우하단 메뉴 FAB ──
-$('tbHome').onclick=showHome;
+// 홈 버튼: 쓰던 앱 전부 종료(force-stop) 후 홈으로.
+function goHomeClose(){if(appShowing()){if(!ctrlSend({t:'gohome'}))send('gohome',{});}showHome();}
+$('tbHome').onclick=goHomeClose;
 $('tbBack').onclick=function(){sendKey(4);};
 $('tbRecent').onclick=openSwitcher;
 // ≡ FAB: 홈에선 전체 앱 서랍, 앱/분할 중엔 하단 메뉴(작업표시줄) 토글.
