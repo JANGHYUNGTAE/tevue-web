@@ -35,7 +35,7 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #homeclock{font-size:56px;font-weight:800;line-height:1;letter-spacing:-1px}
 #homedate{color:rgba(255,255,255,.7);font-size:16px;margin-top:6px;font-weight:600}
 /* 홈 그리드(사용자 배치) */
-#homegrid{position:absolute;left:0;right:0;top:150px;bottom:150px;display:flex;flex-wrap:wrap;gap:20px 28px;align-content:flex-start;justify-content:flex-start;padding:0 48px;overflow-y:auto;z-index:2}
+#homegrid{position:absolute;left:0;right:0;top:150px;bottom:150px;display:flex;flex-wrap:wrap;gap:24px 28px;align-content:flex-start;justify-content:flex-start;padding:18px 48px 0;overflow-y:auto;overflow-x:hidden;z-index:2}
 #homehint{position:absolute;left:0;right:0;top:42%;text-align:center;color:rgba(255,255,255,.55);font-size:16px;z-index:1;pointer-events:none}
 .htile{width:104px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;position:relative;touch-action:none}
 .htile .ic{width:70px;height:70px;border-radius:20px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.4);object-fit:cover;display:flex;align-items:center;justify-content:center;overflow:hidden}
@@ -50,7 +50,7 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #desktop.edit .htile{animation:wig .3s infinite}
 @keyframes wig{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
 #desktop.edit .htile .del{display:flex}
-.htile .del{display:none;position:absolute;top:-6px;right:8px;width:22px;height:22px;border-radius:50%;background:#f85149;color:#fff;align-items:center;justify-content:center;font-size:15px;font-weight:700;z-index:3}
+.htile .del{display:none;position:absolute;top:-12px;right:-6px;width:34px;height:34px;border-radius:50%;background:#f85149;color:#fff;align-items:center;justify-content:center;font-size:20px;font-weight:700;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.25)}
 
 
 /* 전체 앱 서랍 그리드 */
@@ -112,7 +112,7 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #calcancel{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 20px;color:#eef2f7;font-size:14px}
 .caldot{position:fixed;width:46px;height:46px;border:3px solid var(--blue);border-radius:50%;transform:translate(-50%,-50%);z-index:71;pointer-events:none;box-shadow:0 0 12px var(--blue)}
 </style></head>
-<body>
+<body oncontextmenu="return false">
 <video id="video" autoplay playsinline></video>
 
 <!-- 분할(좌우 합성) -->
@@ -366,7 +366,7 @@ function bindDrawerTile(el,a){
   var lp=null,sx=0,sy=0,started=false;
   el.addEventListener('pointerdown',function(e){
     sx=e.clientX;sy=e.clientY;started=false;
-    lp=setTimeout(function(){started=true;closeDrawer();startDrag({t:'a',pkg:a.pkg},null,e.clientX,e.clientY);},330);
+    lp=setTimeout(function(){started=true;closeDrawer();startDrag({t:'a',pkg:a.pkg},null,e.clientX,e.clientY);},500);
   });
   el.addEventListener('pointermove',function(e){
     if(started)return;
@@ -384,7 +384,7 @@ function bindHomeTile(el,item,idx){
   el.addEventListener('pointerdown',function(e){
     if(e.target&&e.target.classList.contains('del')){home.splice(idx,1);saveHome();renderHome();e.stopPropagation();return;}
     sx=e.clientX;sy=e.clientY;started=false;
-    lp=setTimeout(function(){started=true;startDrag(item,idx,e.clientX,e.clientY);},330);
+    lp=setTimeout(function(){started=true;startDrag(item,idx,e.clientX,e.clientY);},500);
   });
   el.addEventListener('pointermove',function(e){
     if(started)return;
