@@ -83,17 +83,12 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #tbclock{font-size:16px;font-weight:700;line-height:1.1}
 #tbconn{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-top:2px}
 #tbdot{width:7px;height:7px;border-radius:50%;background:#2ea043}
-#tbgrab{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:29;width:120px;height:24px;display:none;align-items:flex-end;justify-content:center;padding-bottom:5px}
-#tbgrab.show{display:flex}
-#tbgrab::after{content:"";width:54px;height:5px;border-radius:3px;background:rgba(255,255,255,.45)}
-/* 좌측 엣지 스와이프 → 세로 사이드 메뉴 */
-#edgezone{position:fixed;left:0;top:0;bottom:0;width:22px;z-index:28;pointer-events:none;touch-action:none}
-#edgehint{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:27;width:5px;height:60px;border-radius:0 4px 4px 0;background:rgba(124,58,237,.5);display:none}
-#edgehint.show{display:block}
-#sideback{position:fixed;inset:0;z-index:30;display:none}
-#sideback.show{display:block}
-#sidemenu{position:fixed;left:0;top:0;bottom:0;z-index:31;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:0 14px;background:linear-gradient(90deg,rgba(13,17,23,.95),rgba(13,17,23,.55));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transform:translateX(-100%);transition:transform .2s ease}
-#sidemenu.show{transform:translateX(0)}
+/* 우하단 반투명 메뉴 버튼(FAB) — 탭하면 하단 메뉴(작업표시줄) 표시 */
+#menufab{position:fixed;right:18px;bottom:18px;z-index:32;width:54px;height:54px;border-radius:50%;display:none;align-items:center;justify-content:center;
+  background:rgba(18,22,33,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);
+  color:rgba(255,255,255,.9);font-size:22px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+#menufab.show{display:flex}
+#menufab:active{background:rgba(47,129,247,.6)}
 
 /* ── 최근앱 전환기 ── */
 .sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(6,8,14,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:40px 36px 110px}
@@ -155,17 +150,8 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
   <div id="tbsep"></div>
   <div id="tbinfo"><div id="tbclock"></div><div id="tbconn"><span id="tbdot"></span><span id="tbqual">—</span></div></div>
 </div>
-<div id="tbgrab"></div>
-
-<!-- 좌측 엣지 스와이프 사이드 메뉴 -->
-<div id="edgehint"></div>
-<div id="edgezone"></div>
-<div id="sideback"></div>
-<div id="sidemenu">
-  <button class="tbtn" id="smHome" title="홈">⌂</button>
-  <button class="tbtn" id="smBack" title="뒤로">‹</button>
-  <button class="tbtn" id="smRecent" title="최근앱">▣</button>
-</div>
+<!-- 우하단 반투명 메뉴 버튼 → 탭하면 하단 작업표시줄 표시 -->
+<div id="menufab">≡</div>
 
 <!-- 연결 패널 -->
 <div id="panel">
@@ -257,20 +243,19 @@ function launchSplit(l,r){
 // ── 화면 전환 ──
 var tbTimer=null;
 function taskbarShow(temp){
-  $('taskbar').classList.add('show');$('tbgrab').classList.remove('show');
+  $('taskbar').classList.add('show');
   if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}
-  if(temp){tbTimer=setTimeout(function(){$('taskbar').classList.remove('show');if(appShowing())$('tbgrab').classList.add('show');},4000);}
+  if(temp){tbTimer=setTimeout(function(){$('taskbar').classList.remove('show');},4000);} // FAB는 그대로 → 다시 열기
 }
-function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('taskbar').classList.remove('show');$('tbgrab').classList.remove('show');}
+function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('taskbar').classList.remove('show');}
 function appShowing(){return $('video').style.display==='block'||$('splitwrap').classList.contains('show');}
+function fabShow(v){$('menufab').classList.toggle('show',v);}
 function showHome(){connected=true;setEdit(false);$('panel').classList.add('hidden');$('video').style.display='none';$('splitwrap').classList.remove('show');
-  $('desktop').classList.add('show');$('dock').classList.add('show');$('switcher').classList.remove('show');sideShow(false);taskbarHideAll();edgeActive(false);}
-function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');sideShow(false);
-  $('video').style.display='block';applyCal();taskbarShow(true);edgeActive(true);}
-function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');sideShow(false);
-  $('splitwrap').classList.add('show');layoutSplit();taskbarShow(true);edgeActive(true);}
-function edgeActive(v){$('edgezone').style.pointerEvents=v?'auto':'none';$('edgehint').classList.toggle('show',v);if(!v)sideShow(false);}
-function sideShow(v){$('sidemenu').classList.toggle('show',v);$('sideback').classList.toggle('show',v);}
+  $('desktop').classList.add('show');$('dock').classList.add('show');$('switcher').classList.remove('show');taskbarHideAll();fabShow(false);}
+function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');
+  $('video').style.display='block';applyCal();fabShow(true);taskbarShow(true);}
+function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');
+  $('splitwrap').classList.add('show');layoutSplit();fabShow(true);taskbarShow(true);}
 
 function launch(pkg){
   recents=[pkg].concat(recents.filter(function(p){return p!==pkg}));
@@ -402,21 +387,12 @@ function bindHomeTile(el,item,idx){
   el.addEventListener('pointercancel',function(){if(lp){clearTimeout(lp);lp=null;}});
 }
 
-// ── 작업표시줄/사이드 버튼 ──
+// ── 작업표시줄 버튼 + 우하단 메뉴 FAB ──
 $('tbHome').onclick=showHome;
 $('tbBack').onclick=function(){sendKey(4);};
 $('tbRecent').onclick=openSwitcher;
-$('tbgrab').onclick=function(){taskbarShow(true);};
-$('smHome').onclick=function(){sideShow(false);showHome();};
-$('smBack').onclick=function(){sideShow(false);sendKey(4);};
-$('smRecent').onclick=function(){sideShow(false);openSwitcher();};
-$('sideback').onclick=function(){sideShow(false);};
-(function(){var ez=$('edgezone'),sx=0,sy=0,tk=false;
-  ez.addEventListener('pointerdown',function(e){sx=e.clientX;sy=e.clientY;tk=true;});
-  ez.addEventListener('pointermove',function(e){if(!tk)return;if(e.clientX-sx>32&&Math.abs(e.clientY-sy)<70){tk=false;sideShow(true);}});
-  ez.addEventListener('pointerup',function(){tk=false;});
-  ez.addEventListener('pointercancel',function(){tk=false;});
-})();
+// FAB 탭 → 하단 메뉴 토글(켜져 있으면 닫고, 아니면 4초 표시)
+$('menufab').onclick=function(){if($('taskbar').classList.contains('show'))taskbarHideAll();else taskbarShow(true);};
 $('switchClose').onclick=function(){$('switcher').classList.remove('show');if(!appShowing())showHome();};
 
 // ── 연결 품질 ──
@@ -447,6 +423,8 @@ function newPc(){
   splitTrackCount=0;ctrlDc=null;
   pc.ondatachannel=function(e){ctrlDc=e.channel;};  // 폰이 만든 제어채널(터치/키 로컬 P2P)
   pc.ontrack=function(e){
+    // 저지연: 수신 지터버퍼 최소화 → 영상 즉시 그려 터치 반응이 더 즉각적으로 느껴짐.
+    try{if(e.receiver){e.receiver.jitterBufferTarget=0;e.receiver.playoutDelayHint=0;}}catch(_){}
     var mid=(e.transceiver&&e.transceiver.mid)||null;
     if(splitView){
       var right=(mid==='1')||(mid==null&&splitTrackCount===1);
@@ -467,7 +445,7 @@ function resetForReconnect(){
   try{if(pc)pc.close()}catch(_){}
   pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;lastGen=-1;
   try{$('video').srcObject=null}catch(_){}
-  $('video').style.display='none';$('splitwrap').classList.remove('show');$('desktop').classList.remove('show');$('dock').classList.remove('show');taskbarHideAll();sideShow(false);
+  $('video').style.display='none';$('splitwrap').classList.remove('show');$('desktop').classList.remove('show');$('dock').classList.remove('show');taskbarHideAll();fabShow(false);
   $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
   startReady();
 }
