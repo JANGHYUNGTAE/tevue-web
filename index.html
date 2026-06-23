@@ -187,7 +187,7 @@ var SB_URL='https://dvxnsmoneibdwzegualm.supabase.co';
 var SB_KEY='sb_publishable_a6gOpIV7KMr7KWkcuzn1eQ_CQoJ7k5W';
 var $=function(i){return document.getElementById(i)};
 function st(t){$('status').textContent=t}
-var pc=null,channel=null,sb=null,apps=[],connected=false;
+var pc=null,channel=null,sb=null,apps=[],connected=false,ctrlDc=null;
 var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결(영상 데이터 0)
 var dispW=0,dispH=0; // 단일/좌 디스플레이 픽셀(터치 좌표)
 var splitDisp=[null,null]; // 분할 좌/우 디스플레이 픽셀 {w,h}
@@ -404,11 +404,11 @@ function bindHomeTile(el,item,idx){
 
 // ── 작업표시줄/사이드 버튼 ──
 $('tbHome').onclick=showHome;
-$('tbBack').onclick=function(){send('key',{code:4,d:lastPanel});};
+$('tbBack').onclick=function(){sendKey(4);};
 $('tbRecent').onclick=openSwitcher;
 $('tbgrab').onclick=function(){taskbarShow(true);};
 $('smHome').onclick=function(){sideShow(false);showHome();};
-$('smBack').onclick=function(){sideShow(false);send('key',{code:4,d:lastPanel});};
+$('smBack').onclick=function(){sideShow(false);sendKey(4);};
 $('smRecent').onclick=function(){sideShow(false);openSwitcher();};
 $('sideback').onclick=function(){sideShow(false);};
 (function(){var ez=$('edgezone'),sx=0,sy=0,tk=false;
@@ -440,9 +440,12 @@ function armWatchdog(){
     else{$('msg').textContent='연결 실패 — 네트워크/핫스팟 확인 후 재시도';$('panel').classList.remove('hidden');}
   },12000);
 }
+function ctrlSend(obj){if(ctrlDc&&ctrlDc.readyState==='open'){try{ctrlDc.send(JSON.stringify(obj));return true;}catch(_){}}return false;}
+function sendKey(code){if(!ctrlSend({t:'key',code:code,d:lastPanel}))send('key',{code:code,d:lastPanel});}
 function newPc(){
   pc=new RTCPeerConnection({iceServers:ICE});
-  splitTrackCount=0;
+  splitTrackCount=0;ctrlDc=null;
+  pc.ondatachannel=function(e){ctrlDc=e.channel;};  // 폰이 만든 제어채널(터치/키 로컬 P2P)
   pc.ontrack=function(e){
     var mid=(e.transceiver&&e.transceiver.mid)||null;
     if(splitView){
@@ -515,13 +518,17 @@ function mapTouch(el,w,h,cx,cy){
   var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;
   var x=(cx-ox)/s,y=(cy-oy)/s;if(x<0||x>iw||y<0||y>ih)return null;return {x:x,y:y};
 }
+function touchSend(a,x,y,panel){
+  // 로컬 P2P DataChannel 우선(저지연), 미연결 시 Supabase 폴백.
+  if(!ctrlSend({t:'touch',a:a,x:x,y:y,d:panel}))send('touch',{a:a,x:x,y:y,d:panel});
+}
 function bindTouch(el,getDims,panel){
   var down=false,lastP=null,lastMove=0;el.style.touchAction='none';
   function dims(){return getDims();}
-  el.addEventListener('pointerdown',function(e){down=true;lastPanel=panel;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:0,x:p.x,y:p.y,d:panel});}e.preventDefault();});
-  el.addEventListener('pointermove',function(e){if(!down)return;var now=Date.now();if(now-lastMove<16)return;lastMove=now;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:2,x:p.x,y:p.y,d:panel});}});
-  el.addEventListener('pointerup',function(e){down=false;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY)||lastP;if(p)send('touch',{a:1,x:p.x,y:p.y,d:panel});});
-  el.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y,d:panel});down=false;});
+  el.addEventListener('pointerdown',function(e){down=true;lastPanel=panel;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY);if(p){lastP=p;touchSend(0,p.x,p.y,panel);}e.preventDefault();});
+  el.addEventListener('pointermove',function(e){if(!down)return;var now=Date.now();if(now-lastMove<16)return;lastMove=now;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY);if(p){lastP=p;touchSend(2,p.x,p.y,panel);}});
+  el.addEventListener('pointerup',function(e){down=false;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY)||lastP;if(p)touchSend(1,p.x,p.y,panel);});
+  el.addEventListener('pointercancel',function(){if(down&&lastP)touchSend(1,lastP.x,lastP.y,panel);down=false;});
 }
 bindTouch($('video'),function(){return {w:dispW,h:dispH}},0);
 bindTouch($('vidL'),function(){return splitDisp[0]||{w:0,h:0}},0);
