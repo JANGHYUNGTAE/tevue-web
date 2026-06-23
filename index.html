@@ -31,11 +31,8 @@ h1{font-size:46px;font-weight:800;margin:0}h1 .v{color:var(--blue);text-shadow:0
 #drawer.show{display:block}
 #drawerGrid{display:flex;flex-wrap:wrap;gap:24px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
 #drawerClose{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:13;background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:22px;padding:10px 30px;font-size:15px}
-/* TeVue 자체 nav(좌하단). 삼성 DeX 작업표시줄(우하단) 네비는 폰(A) 기준이라 못 씀 →
-   우리 nav 가 차 화면(보조디스플레이) 기준으로 동작. 뒤로(key4)/홈(DeX홈)/앱전환(차 기준). */
-#navbar{position:fixed;bottom:14px;left:14px;z-index:11;display:none;gap:10px}
-#navbar.show{display:flex}
-#navbar button{width:46px;height:46px;border-radius:50%;background:rgba(13,17,23,.78);border:1px solid #30363d;color:#e6edf3;font-size:19px}
+/* 전체 DeX 전용 — 자체 nav 제거(사용자 결정). 차 화면은 순수 DeX, 네비는 DeX 작업표시줄 사용. */
+#navbar,#navbar.show{display:none!important}
 #status{position:fixed;top:10px;left:10px;z-index:21;background:rgba(13,17,23,.6);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
 #changecode{position:fixed;top:10px;right:10px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
 #calibrate{position:fixed;top:10px;right:104px;z-index:21;background:rgba(13,17,23,.6);border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--sub);display:none}
