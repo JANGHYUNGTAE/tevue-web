@@ -84,11 +84,11 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #tbconn{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-top:2px}
 #tbdot{width:7px;height:7px;border-radius:50%;background:#2ea043}
 /* 우하단 반투명 메뉴 버튼(FAB) — 탭하면 하단 메뉴(작업표시줄) 표시 */
-#menufab{position:fixed;right:18px;bottom:18px;z-index:32;width:54px;height:54px;border-radius:50%;display:none;align-items:center;justify-content:center;
-  background:rgba(18,22,33,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);
-  color:rgba(255,255,255,.9);font-size:22px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+#menufab{position:fixed;right:20px;bottom:20px;z-index:45;width:58px;height:58px;border-radius:50%;display:none;align-items:center;justify-content:center;
+  background:rgba(20,26,40,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid rgba(255,255,255,.35);
+  color:#fff;font-size:26px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.55)}
 #menufab.show{display:flex}
-#menufab:active{background:rgba(47,129,247,.6)}
+#menufab:active{background:rgba(47,129,247,.75)}
 
 /* ── 최근앱 전환기 ── */
 .sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(6,8,14,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:40px 36px 110px}
@@ -251,7 +251,7 @@ function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('tas
 function appShowing(){return $('video').style.display==='block'||$('splitwrap').classList.contains('show');}
 function fabShow(v){$('menufab').classList.toggle('show',v);}
 function showHome(){connected=true;setEdit(false);$('panel').classList.add('hidden');$('video').style.display='none';$('splitwrap').classList.remove('show');
-  $('desktop').classList.add('show');$('dock').classList.add('show');$('switcher').classList.remove('show');taskbarHideAll();fabShow(false);}
+  $('desktop').classList.add('show');$('dock').classList.add('show');$('switcher').classList.remove('show');taskbarHideAll();fabShow(true);}
 function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');
   $('video').style.display='block';applyCal();fabShow(true);taskbarShow(true);}
 function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');
