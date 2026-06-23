@@ -59,8 +59,19 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 .dtile .ic{width:50px;height:50px;border-radius:15px;background:#fff;object-fit:cover;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .dtile .ic img{width:100%;height:100%;object-fit:cover}
 .dtile .ic.ph{background:rgba(255,255,255,.14);font-size:22px;color:#fff}
+.dtile .ic.draw{background:linear-gradient(135deg,#2f81f7,#7c3aed);color:#fff;font-size:24px}
 .dtile .nm{color:#cfd6e0;font-size:10px;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dtile:active{transform:scale(.9)}
+
+/* 전체 앱 서랍 그리드 */
+#appsearch{display:block;margin:0 auto 18px;width:min(420px,80vw);font-size:16px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:#fff;text-align:center}
+#drawerGrid{display:flex;flex-wrap:wrap;gap:20px 24px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:calc(100% - 60px);padding-bottom:20px}
+.dapp{width:96px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;touch-action:none}
+.dapp .ic{width:64px;height:64px;border-radius:18px;background:#fff;object-fit:cover;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.dapp .ic img{width:100%;height:100%;object-fit:cover}
+.dapp .ic.ph{background:rgba(255,255,255,.12);font-size:26px;color:#fff}
+.dapp .nm{color:#fff;font-size:12px;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dapp:active{transform:scale(.92)}
 
 /* 드래그 고스트 / 휴지통 */
 .ghost{position:fixed;z-index:50;width:84px;pointer-events:none;transform:translate(-50%,-50%);opacity:.92;display:flex;flex-direction:column;align-items:center;gap:6px}
@@ -125,7 +136,7 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 <!-- 홈 -->
 <div id="desktop">
   <div id="hometop"><div id="homeclock"></div><div id="homedate"></div></div>
-  <div id="homehint">아래 독에서 앱을 길게 눌러 홈으로 끌어다 놓으세요.<br>앱을 다른 앱 위에 올리면 좌우 분할 아이콘이 됩니다.</div>
+  <div id="homehint">아래 <b>전체 앱</b> ⊞ 에서 앱을 길게 눌러 홈으로 끌어다 놓으세요.<br>앱을 다른 앱 위에 올리면 좌우 분할 아이콘이 됩니다.</div>
   <div id="homegrid"></div>
 </div>
 
@@ -137,6 +148,12 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 
 <!-- 드래그 고스트 -->
 <div id="ghostlayer"></div>
+
+<!-- 전체 앱 서랍(DeX식) -->
+<div id="drawer" class="sheet"><div class="sheettitle">전체 앱</div>
+  <input id="appsearch" placeholder="앱 검색…" autocomplete="off"/>
+  <div id="drawerGrid"></div>
+  <button id="drawerClose" class="sheetclose">닫기</button></div>
 
 <!-- 앱 전환기(최근앱) -->
 <div id="switcher" class="sheet"><div class="sheettitle">최근 앱</div><div id="switchGrid"></div>
@@ -220,7 +237,14 @@ function renderHome(){
 }
 function renderDock(){
   var d=$('dock');d.innerHTML='';
-  apps.forEach(function(a){
+  // 전체 앱 서랍 버튼(DeX식) — 탭하면 설치된 모든 앱 목록.
+  var b=document.createElement('div');b.className='dtile drawerbtn';
+  b.innerHTML='<div class="ic draw">⊞</div><div class="nm">전체 앱</div>';
+  b.onclick=function(){openDrawer();};
+  d.appendChild(b);
+  // 최근 실행한 앱(빠른 접근). 길게 누르면 홈으로 드래그도 가능.
+  recents.forEach(function(pkg){
+    var a=appByPkg(pkg);if(!a)return;
     var t=document.createElement('div');t.className='dtile';t.dataset.pkg=a.pkg;
     var ic=iconSrc(a.icon);
     t.innerHTML=(ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">▦</div>')+'<div class="nm">'+a.label+'</div>';
@@ -228,7 +252,25 @@ function renderDock(){
     d.appendChild(t);
   });
 }
-function renderApps(){renderDock();renderHome();renderSwitch();}
+// 전체 앱 서랍(DeX식) — 설치된 모든 앱. 탭=실행, 길게=홈으로 드래그.
+function renderDrawer(){
+  var g=$('drawerGrid');if(!g)return;g.innerHTML='';
+  var q=($('appsearch').value||'').trim().toLowerCase();
+  var list=q?apps.filter(function(a){return a.label.toLowerCase().indexOf(q)>=0;}):apps;
+  if(!list.length){g.innerHTML='<div class="hint">앱 목록을 불러오는 중…</div>';return;}
+  list.forEach(function(a){
+    var t=document.createElement('div');t.className='dapp';t.dataset.pkg=a.pkg;
+    var ic=iconSrc(a.icon);
+    t.innerHTML=(ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">▦</div>')+'<div class="nm">'+a.label+'</div>';
+    bindDrawerTile(t,a);
+    g.appendChild(t);
+  });
+}
+function openDrawer(){$('appsearch').value='';renderDrawer();$('drawer').classList.add('show');}
+function closeDrawer(){$('drawer').classList.remove('show');}
+function renderApps(){renderDock();renderHome();renderSwitch();if($('drawer').classList.contains('show'))renderDrawer();}
+var _renderT=null;
+function renderAppsDebounced(){if(_renderT)return;_renderT=setTimeout(function(){_renderT=null;renderApps();},180);}
 
 // ── 홈 아이템 실행 ──
 function launchItem(item){
@@ -251,10 +293,10 @@ function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('tas
 function appShowing(){return $('video').style.display==='block'||$('splitwrap').classList.contains('show');}
 function fabShow(v){$('menufab').classList.toggle('show',v);}
 function showHome(){connected=true;setEdit(false);$('panel').classList.add('hidden');$('video').style.display='none';$('splitwrap').classList.remove('show');
-  $('desktop').classList.add('show');$('dock').classList.add('show');$('switcher').classList.remove('show');taskbarHideAll();fabShow(true);}
-function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');
+  $('desktop').classList.add('show');$('dock').classList.add('show');$('switcher').classList.remove('show');$('drawer').classList.remove('show');taskbarHideAll();fabShow(true);}
+function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');$('drawer').classList.remove('show');
   $('video').style.display='block';applyCal();fabShow(true);taskbarShow(true);}
-function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');
+function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');$('drawer').classList.remove('show');
   $('splitwrap').classList.add('show');layoutSplit();fabShow(true);taskbarShow(true);}
 
 function launch(pkg){
@@ -366,6 +408,23 @@ function bindDockTile(el,a){
   });
   el.addEventListener('pointercancel',function(){if(lp){clearTimeout(lp);lp=null;}});
 }
+// 서랍 타일: 짧게탭=실행, 길게=서랍 닫고 홈으로 드래그
+function bindDrawerTile(el,a){
+  var lp=null,sx=0,sy=0,started=false;
+  el.addEventListener('pointerdown',function(e){
+    sx=e.clientX;sy=e.clientY;started=false;
+    lp=setTimeout(function(){started=true;closeDrawer();startDrag({t:'a',pkg:a.pkg},null,e.clientX,e.clientY);},330);
+  });
+  el.addEventListener('pointermove',function(e){
+    if(started)return;
+    if(Math.abs(e.clientX-sx)>12||Math.abs(e.clientY-sy)>12){if(lp){clearTimeout(lp);lp=null;}}
+  });
+  el.addEventListener('pointerup',function(e){
+    if(lp){clearTimeout(lp);lp=null;}
+    if(!started&&Math.abs(e.clientX-sx)<12&&Math.abs(e.clientY-sy)<12){closeDrawer();launch(a.pkg);}
+  });
+  el.addEventListener('pointercancel',function(){if(lp){clearTimeout(lp);lp=null;}});
+}
 // 홈 타일: 짧게탭=실행, 길게=편집/드래그, ×버튼=삭제
 function bindHomeTile(el,item,idx){
   var lp=null,sx=0,sy=0,started=false;
@@ -393,7 +452,9 @@ $('tbBack').onclick=function(){sendKey(4);};
 $('tbRecent').onclick=openSwitcher;
 // FAB 탭 → 하단 메뉴 토글(켜져 있으면 닫고, 아니면 4초 표시)
 $('menufab').onclick=function(){if($('taskbar').classList.contains('show'))taskbarHideAll();else taskbarShow(true);};
-$('switchClose').onclick=function(){$('switcher').classList.remove('show');if(!appShowing())showHome();};
+$('switchClose').onclick=function(){$('switcher').classList.remove('show');$('drawer').classList.remove('show');if(!appShowing())showHome();};
+$('drawerClose').onclick=function(){closeDrawer();};
+$('appsearch').addEventListener('input',renderDrawer);
 
 // ── 연결 품질 ──
 function onStats(p){
@@ -471,7 +532,12 @@ async function onOffer(p){
   }catch(e){answered=false;$('msg').textContent='오류: '+e.message}
 }
 async function onIce(p){if(p.from==='receiver'||!p.candidate)return;if(!pc||!remoteSet){pendingIce.push(p.candidate);return;}try{await pc.addIceCandidate(p.candidate)}catch(_){}}
-function onApps(p){if(p&&p.apps){apps=p.apps;renderApps();}}
+// 전체 앱 목록(라벨+pkg, 즉시) — 기존 아이콘 보존하며 교체.
+function onApplist(p){if(!p||!p.apps)return;var prev={};apps.forEach(function(a){if(a.icon)prev[a.pkg]=a.icon;});
+  apps=p.apps.map(function(a){return {label:a.label,pkg:a.pkg,icon:prev[a.pkg]||null};});renderApps();}
+// 아이콘 청크(진행형) — 해당 앱에 채우고 디바운스 렌더.
+function onIcons(p){if(!p||!p.icons)return;var idx={};apps.forEach(function(a,i){idx[a.pkg]=i;});
+  p.icons.forEach(function(it){var i=idx[it.pkg];if(i!=null)apps[i].icon=it.icon;});renderAppsDebounced();}
 
 // ── 분할 레이아웃(드래그 분할선) ──
 var splitRatio=0.5;
@@ -534,7 +600,8 @@ async function connect(room){
   channel=sb.channel(room,{config:{broadcast:{self:false,ack:false}}});
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
     .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
-    .on('broadcast',{event:'apps'},function(m){onApps(m.payload)})
+    .on('broadcast',{event:'applist'},function(m){onApplist(m.payload)})
+    .on('broadcast',{event:'icons'},function(m){onIcons(m.payload)})
     .on('broadcast',{event:'app-launched'},function(){if(splitView)showSplit();else showVideo();})
     .on('broadcast',{event:'stats'},function(m){onStats(m.payload)})
     .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');startReady();}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
