@@ -9,6 +9,13 @@
 button{font-family:inherit}
 #video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none;z-index:5}
 
+/* ── 분할(2디스플레이 좌우 합성) ── */
+#splitwrap{position:fixed;inset:0;z-index:6;display:none;background:#000}
+#splitwrap.show{display:flex}
+.spv{height:100%;background:#000;object-fit:contain;display:block}
+#sdiv{flex:0 0 auto;width:16px;background:linear-gradient(180deg,rgba(47,129,247,.25),rgba(47,129,247,.6),rgba(47,129,247,.25));display:flex;align-items:center;justify-content:center;cursor:ew-resize;touch-action:none;z-index:7}
+#sdiv::after{content:"";width:4px;height:46px;border-radius:3px;background:rgba(255,255,255,.85)}
+
 /* ── 연결 패널 ── */
 #panel{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,#15173a,#05070d 70%)}
 #panel.hidden{display:none}
@@ -22,30 +29,60 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #desktop{position:fixed;inset:0;z-index:8;display:none;background:linear-gradient(160deg,#10122e 0%,#241a4d 40%,#3d2a7a 75%,#5a34b0 100%)}
 #desktop.show{display:block}
 #desktop::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:radial-gradient(120% 100% at 50% 120%,rgba(124,58,237,.5),transparent 72%);pointer-events:none}
-#hometop{position:absolute;top:30px;left:48px;z-index:2}
-#homeclock{font-size:60px;font-weight:800;line-height:1;letter-spacing:-1px}
+#hometop{position:absolute;top:26px;left:48px;z-index:2}
+#homeclock{font-size:56px;font-weight:800;line-height:1;letter-spacing:-1px}
 #homedate{color:rgba(255,255,255,.7);font-size:16px;margin-top:6px;font-weight:600}
-#apps{position:absolute;left:0;right:0;top:170px;bottom:96px;display:flex;flex-wrap:wrap;gap:22px 30px;justify-content:center;align-content:flex-start;padding:0 48px;overflow-y:auto}
-.app{width:104px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer}
-.app img{width:68px;height:68px;border-radius:20px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.4);object-fit:cover}
-.app .ph{width:68px;height:68px;border-radius:20px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:30px}
-.app .nm{color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5);max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.app.sel img,.app.sel .ph{outline:3px solid var(--blue);outline-offset:3px}
-.app:active{transform:scale(.9)}
+/* 홈 그리드(사용자 배치) */
+#homegrid{position:absolute;left:0;right:0;top:150px;bottom:150px;display:flex;flex-wrap:wrap;gap:20px 28px;align-content:flex-start;justify-content:flex-start;padding:0 48px;overflow-y:auto;z-index:2}
+#homehint{position:absolute;left:0;right:0;top:42%;text-align:center;color:rgba(255,255,255,.55);font-size:16px;z-index:1;pointer-events:none}
+.htile{width:104px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;position:relative;touch-action:none}
+.htile .ic{width:70px;height:70px;border-radius:20px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.4);object-fit:cover;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.htile .ic img{width:100%;height:100%;object-fit:cover}
+.htile .ic.ph{background:rgba(255,255,255,.12);font-size:30px;color:#fff}
+/* 분할(합쳐진) 아이콘 = 두 앱 좌우 */
+.htile .ic.split{background:linear-gradient(135deg,#1b2342,#2a2150);padding:0;gap:0}
+.htile .ic.split img{width:50%;height:100%;object-fit:cover}
+.htile .nm{color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5);max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.htile:active{transform:scale(.92)}
+.htile.merge .ic{outline:3px solid var(--blue);outline-offset:3px}
+#desktop.edit .htile{animation:wig .3s infinite}
+@keyframes wig{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
+#desktop.edit .htile .del{display:flex}
+.htile .del{display:none;position:absolute;top:-6px;right:8px;width:22px;height:22px;border-radius:50%;background:#f85149;color:#fff;align-items:center;justify-content:center;font-size:15px;font-weight:700;z-index:3}
 
-/* ── 작업표시줄(하단, 미러링 중 상시) ── */
+/* ── 독(전체 앱, 드래그 소스) ── */
+#dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:14;max-width:94vw;display:none;align-items:center;gap:10px;overflow-x:auto;
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:24px;padding:10px 16px;box-shadow:0 12px 34px rgba(0,0,0,.5);scrollbar-width:none}
+#dock::-webkit-scrollbar{display:none}
+#dock.show{display:flex}
+.dtile{flex:0 0 auto;width:62px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;touch-action:pan-x}
+.dtile .ic{width:50px;height:50px;border-radius:15px;background:#fff;object-fit:cover;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.dtile .ic img{width:100%;height:100%;object-fit:cover}
+.dtile .ic.ph{background:rgba(255,255,255,.14);font-size:22px;color:#fff}
+.dtile .nm{color:#cfd6e0;font-size:10px;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtile:active{transform:scale(.9)}
+
+/* 드래그 고스트 / 휴지통 */
+.ghost{position:fixed;z-index:50;width:84px;pointer-events:none;transform:translate(-50%,-50%);opacity:.92;display:flex;flex-direction:column;align-items:center;gap:6px}
+.ghost .ic{width:70px;height:70px;border-radius:20px;background:#fff;object-fit:cover;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 30px rgba(0,0,0,.6)}
+.ghost .ic img{width:100%;height:100%;object-fit:cover}
+.ghost .ic.split img{width:50%;height:100%}
+.ghost .nm{color:#fff;font-size:12px}
+#trash{position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:49;display:none;align-items:center;gap:10px;background:rgba(248,81,73,.18);border:1.5px solid #f85149;color:#ffd7d4;border-radius:18px;padding:12px 26px;font-size:16px;font-weight:600}
+#trash.show{display:flex}
+#trash.hot{background:#f85149;color:#fff;transform:translateX(-50%) scale(1.08)}
+
+/* ── 작업표시줄(앱/분할 실행 중) ── */
 #taskbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:30;display:none;align-items:center;gap:6px;
   background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:20px;padding:8px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 #taskbar.show{display:flex}
 .tbtn{width:50px;height:50px;border-radius:14px;border:0;background:rgba(255,255,255,.08);color:#fff;font-size:21px;display:flex;align-items:center;justify-content:center}
 .tbtn:active{background:rgba(255,255,255,.2)}
-.tbtn.accent{background:var(--blue)}
 #tbsep{width:1px;height:30px;background:var(--line);margin:0 4px}
 #tbinfo{display:flex;flex-direction:column;align-items:flex-end;padding:0 8px 0 4px;min-width:64px}
 #tbclock{font-size:16px;font-weight:700;line-height:1.1}
 #tbconn{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-top:2px}
 #tbdot{width:7px;height:7px;border-radius:50%;background:#2ea043}
-/* 작업표시줄 꺼내는 손잡이(앱 실행 중 표시줄 숨겼을 때) */
 #tbgrab{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:29;width:120px;height:24px;display:none;align-items:flex-end;justify-content:center;padding-bottom:5px}
 #tbgrab.show{display:flex}
 #tbgrab::after{content:"";width:54px;height:5px;border-radius:3px;background:rgba(255,255,255,.45)}
@@ -58,17 +95,16 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 #sidemenu{position:fixed;left:0;top:0;bottom:0;z-index:31;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:0 14px;background:linear-gradient(90deg,rgba(13,17,23,.95),rgba(13,17,23,.55));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transform:translateX(-100%);transition:transform .2s ease}
 #sidemenu.show{transform:translateX(0)}
 
-/* ── 앱 서랍 / 전환기 ── */
+/* ── 최근앱 전환기 ── */
 .sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(6,8,14,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:40px 36px 110px}
 .sheet.show{display:block}
 .sheettitle{color:#fff;font-size:20px;font-weight:700;text-align:center;margin-bottom:22px}
-#drawerGrid,#switchGrid{display:flex;flex-wrap:wrap;gap:22px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
+#switchGrid{display:flex;flex-wrap:wrap;gap:22px 26px;justify-content:center;align-content:flex-start;overflow-y:auto;max-height:100%}
 .card{width:150px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer}
 .card .thumb{width:150px;height:90px;border-radius:14px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
 .card .thumb img{width:50px;height:50px;border-radius:14px}
 .card .nm{color:#fff;font-size:13px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheetclose{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:41;background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:24px;padding:12px 36px;font-size:16px}
-#splithint{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);z-index:41;color:var(--blue);font-size:14px;font-weight:600;display:none}
 
 /* ── 보조(코드/보정) ── */
 #status{position:fixed;top:8px;left:8px;z-index:55;background:rgba(13,17,23,.5);border-radius:8px;padding:4px 9px;font-size:10px;color:var(--sub);font-family:ui-monospace,monospace;display:none}
@@ -82,6 +118,10 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 </style></head>
 <body>
 <video id="video" autoplay playsinline></video>
+
+<!-- 분할(좌우 합성) -->
+<div id="splitwrap"><video id="vidL" class="spv" autoplay playsinline></video><div id="sdiv"></div><video id="vidR" class="spv" autoplay playsinline></video></div>
+
 <div id="status">시작</div>
 <button id="changecode">코드 변경</button>
 <button id="calibrate">⚙ 화면보정</button>
@@ -90,13 +130,18 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 <!-- 홈 -->
 <div id="desktop">
   <div id="hometop"><div id="homeclock"></div><div id="homedate"></div></div>
-  <div id="apps"></div>
+  <div id="homehint">아래 독에서 앱을 길게 눌러 홈으로 끌어다 놓으세요.<br>앱을 다른 앱 위에 올리면 좌우 분할 아이콘이 됩니다.</div>
+  <div id="homegrid"></div>
 </div>
 
-<!-- 앱 서랍(전체 앱) -->
-<div id="drawer" class="sheet"><div class="sheettitle">전체 앱</div><div id="drawerGrid"></div>
-  <div id="splithint">화면분할: 앱 2개를 선택하세요</div>
-  <button id="drawerClose" class="sheetclose">닫기</button></div>
+<!-- 독(전체 앱) -->
+<div id="dock"></div>
+
+<!-- 휴지통(편집 모드) -->
+<div id="trash">🗑  여기로 끌어 삭제</div>
+
+<!-- 드래그 고스트 -->
+<div id="ghostlayer"></div>
 
 <!-- 앱 전환기(최근앱) -->
 <div id="switcher" class="sheet"><div class="sheettitle">최근 앱</div><div id="switchGrid"></div>
@@ -107,8 +152,6 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
   <button class="tbtn" id="tbHome" title="홈">⌂</button>
   <button class="tbtn" id="tbBack" title="뒤로">‹</button>
   <button class="tbtn" id="tbRecent" title="최근앱">▣</button>
-  <button class="tbtn" id="tbApps" title="전체앱">⊞</button>
-  <button class="tbtn" id="tbSplit" title="화면분할">◫</button>
   <div id="tbsep"></div>
   <div id="tbinfo"><div id="tbclock"></div><div id="tbconn"><span id="tbdot"></span><span id="tbqual">—</span></div></div>
 </div>
@@ -122,8 +165,6 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
   <button class="tbtn" id="smHome" title="홈">⌂</button>
   <button class="tbtn" id="smBack" title="뒤로">‹</button>
   <button class="tbtn" id="smRecent" title="최근앱">▣</button>
-  <button class="tbtn" id="smApps" title="전체앱">⊞</button>
-  <button class="tbtn" id="smSplit" title="화면분할">◫</button>
 </div>
 
 <!-- 연결 패널 -->
@@ -148,10 +189,10 @@ var $=function(i){return document.getElementById(i)};
 function st(t){$('status').textContent=t}
 var pc=null,channel=null,sb=null,apps=[],connected=false;
 var ICE=[]; // host(로컬) 후보만 — 같은 망에서만 연결(영상 데이터 0)
-var dispW=0,dispH=0; // 가상디스플레이 실제 픽셀(offer) — 터치 좌표
+var dispW=0,dispH=0; // 단일/좌 디스플레이 픽셀(터치 좌표)
+var splitDisp=[null,null]; // 분할 좌/우 디스플레이 픽셀 {w,h}
 var cal=null; // 화면 보정 rect{x,y,w,h}
-var recents=[]; // 우리가 띄운 앱(pkg) 최근순 — 자체 앱전환기(삼성 recents 가 폰기준이라 대체)
-var splitMode=false,splitSel=[]; // 화면분할 2앱 선택
+var recents=[]; // 우리가 띄운 앱(pkg) 최근순
 function send(ev,p){if(channel)channel.send({type:'broadcast',event:ev,payload:p})}
 function iconSrc(ic){return ic?(ic.indexOf('data:')===0?ic:'data:image/png;base64,'+ic):''}
 function appByPkg(p){for(var i=0;i<apps.length;i++)if(apps[i].pkg===p)return apps[i];return null;}
@@ -161,49 +202,81 @@ function two(n){return (''+n).padStart(2,'0')}
 function clock(){var d=new Date();var hm=two(d.getHours())+':'+two(d.getMinutes());$('homeclock').textContent=hm;$('tbclock').textContent=hm;
   var wd=['일','월','화','수','목','금','토'][d.getDay()];$('homedate').textContent=(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+wd+')';}
 
-// ── 홈 앱 그리드 ──
-function appEl(a){
-  var d=document.createElement('div');d.className='app';
-  var ic=iconSrc(a.icon);
-  d.innerHTML=(ic?'<img src="'+ic+'"/>':'<div class="ph">▦</div>')+'<div class="nm">'+a.label+'</div>';
-  d.onclick=function(){onAppTap(a.pkg);};
-  return d;
+// ── 홈 배치 모델(localStorage) ──
+// home = [{t:'a',pkg} | {t:'s',l,r}]
+var home=[];
+function homeKey(){return 'tevue_home_'+(curCode||'')}
+function loadHome(){try{var s=localStorage.getItem(homeKey());home=s?JSON.parse(s):[];}catch(_){home=[];}}
+function saveHome(){try{localStorage.setItem(homeKey(),JSON.stringify(home));}catch(_){}}
+
+// 아이콘 내부 HTML
+function appIcHtml(pkg){var a=appByPkg(pkg);var ic=a?iconSrc(a.icon):'';return ic?'<img src="'+ic+'"/>':'▦';}
+function tileIcHtml(item){
+  if(item.t==='s')return '<div class="ic split"><img src="'+(appByPkg(item.l)&&iconSrc(appByPkg(item.l).icon)||'')+'"/><img src="'+(appByPkg(item.r)&&iconSrc(appByPkg(item.r).icon)||'')+'"/></div>';
+  var a=appByPkg(item.pkg);var ic=a?iconSrc(a.icon):'';
+  return ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">▦</div>';
 }
-function renderApps(){
-  var g=$('apps');g.innerHTML='';apps.forEach(function(a){g.appendChild(appEl(a))});
-  var dg=$('drawerGrid');dg.innerHTML='';apps.forEach(function(a){var e=appEl(a);e.dataset.pkg=a.pkg;dg.appendChild(e)});
-  renderSwitch();
+function tileName(item){
+  if(item.t==='s'){var l=appByPkg(item.l),r=appByPkg(item.r);return (l?l.label:'?')+' | '+(r?r.label:'?');}
+  var a=appByPkg(item.pkg);return a?a.label:item.pkg;
 }
-function onAppTap(pkg){
-  if(splitMode){toggleSplitPick(pkg);return;}
-  launch(pkg);
+
+// ── 홈 그리드 렌더 ──
+function renderHome(){
+  var g=$('homegrid');g.innerHTML='';
+  $('homehint').style.display=home.length?'none':'block';
+  home.forEach(function(item,idx){
+    var d=document.createElement('div');d.className='htile'+(item.t==='s'?'':'');d.dataset.idx=idx;
+    d.innerHTML=tileIcHtml(item)+'<div class="nm">'+tileName(item)+'</div><div class="del">×</div>';
+    bindHomeTile(d,item,idx);
+    g.appendChild(d);
+  });
+}
+function renderDock(){
+  var d=$('dock');d.innerHTML='';
+  apps.forEach(function(a){
+    var t=document.createElement('div');t.className='dtile';t.dataset.pkg=a.pkg;
+    var ic=iconSrc(a.icon);
+    t.innerHTML=(ic?'<div class="ic"><img src="'+ic+'"/></div>':'<div class="ic ph">▦</div>')+'<div class="nm">'+a.label+'</div>';
+    bindDockTile(t,a);
+    d.appendChild(t);
+  });
+}
+function renderApps(){renderDock();renderHome();renderSwitch();}
+
+// ── 홈 아이템 실행 ──
+function launchItem(item){
+  if(item.t==='s'){launchSplit(item.l,item.r);return;}
+  launch(item.pkg);
+}
+function launchSplit(l,r){
+  recents=[l,r].concat(recents.filter(function(p){return p!==l&&p!==r}));
+  send('split',{a:l,b:r});splitView=true;renderSwitch();
 }
 
 // ── 화면 전환 ──
-// 작업표시줄: 홈에선 상시, 앱 실행 중엔 잠깐 보이고 자동숨김(손잡이 탭으로 다시 꺼냄).
 var tbTimer=null;
 function taskbarShow(temp){
   $('taskbar').classList.add('show');$('tbgrab').classList.remove('show');
   if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}
-  if(temp){tbTimer=setTimeout(function(){$('taskbar').classList.remove('show');if(videoOn())$('tbgrab').classList.add('show');},4000);}
+  if(temp){tbTimer=setTimeout(function(){$('taskbar').classList.remove('show');if(appShowing())$('tbgrab').classList.add('show');},4000);}
 }
 function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('taskbar').classList.remove('show');$('tbgrab').classList.remove('show');}
-function showHome(){connected=true;$('panel').classList.add('hidden');$('video').style.display='none';
-  $('desktop').classList.add('show');closeSheets();taskbarShow(false);edgeActive(false);}
-function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');closeSheets();
+function appShowing(){return $('video').style.display==='block'||$('splitwrap').classList.contains('show');}
+function showHome(){connected=true;setEdit(false);$('panel').classList.add('hidden');$('video').style.display='none';$('splitwrap').classList.remove('show');
+  $('desktop').classList.add('show');$('dock').classList.add('show');$('switcher').classList.remove('show');sideShow(false);taskbarHideAll();edgeActive(false);}
+function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');sideShow(false);
   $('video').style.display='block';applyCal();taskbarShow(true);edgeActive(true);}
-function closeSheets(){$('drawer').classList.remove('show');$('switcher').classList.remove('show');exitSplit();sideShow(false);}
-// 좌측 엣지 스와이프 사이드 메뉴 (앱 실행 중에만 엣지존 활성)
+function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('dock').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');sideShow(false);
+  $('splitwrap').classList.add('show');layoutSplit();taskbarShow(true);edgeActive(true);}
 function edgeActive(v){$('edgezone').style.pointerEvents=v?'auto':'none';$('edgehint').classList.toggle('show',v);if(!v)sideShow(false);}
 function sideShow(v){$('sidemenu').classList.toggle('show',v);$('sideback').classList.toggle('show',v);}
 
 function launch(pkg){
   recents=[pkg].concat(recents.filter(function(p){return p!==pkg}));
-  send('launch',{pkg:pkg});showVideo();renderSwitch();
+  send('launch',{pkg:pkg});splitView=false;showVideo();renderSwitch();
 }
 
-// ── 전체 앱 서랍 ──
-function openDrawer(){$('drawer').classList.add('show');$('desktop').classList.remove('show');}
 // ── 최근앱 전환기 ──
 function renderSwitch(){
   var g=$('switchGrid');if(!g)return;g.innerHTML='';
@@ -216,35 +289,127 @@ function renderSwitch(){
     g.appendChild(c);
   });
 }
-function openSwitcher(){renderSwitch();$('switcher').classList.add('show');$('desktop').classList.remove('show');}
+function openSwitcher(){renderSwitch();$('switcher').classList.add('show');$('desktop').classList.remove('show');$('dock').classList.remove('show');}
 
-// ── 화면분할 ──
-function enterSplit(){splitMode=true;splitSel=[];$('splithint').style.display='block';openDrawer();updateSplitSel();}
-function exitSplit(){splitMode=false;splitSel=[];$('splithint').style.display='none';updateSplitSel();}
-function toggleSplitPick(pkg){
-  var i=splitSel.indexOf(pkg);
-  if(i>=0)splitSel.splice(i,1);else if(splitSel.length<2)splitSel.push(pkg);
-  if(splitSel.length===2){var a=splitSel[0],b=splitSel[1];send('split',{a:a,b:b});recents=[a,b].concat(recents.filter(function(p){return p!==a&&p!==b}));exitSplit();showVideo();renderSwitch();return;}
-  updateSplitSel();
+// ── 편집 모드 ──
+function setEdit(v){$('desktop').classList.toggle('edit',v);}
+
+// ── 드래그 앤 드롭(독→홈 추가 / 합치기 / 홈 이동·삭제) ──
+var drag=null; // {item, fromHomeIdx(or -1), ghost, moved}
+function makeGhost(item,x,y){
+  var g=document.createElement('div');g.className='ghost';
+  g.innerHTML=tileIcHtml(item)+'<div class="nm">'+tileName(item)+'</div>';
+  $('ghostlayer').appendChild(g);g.style.left=x+'px';g.style.top=y+'px';return g;
 }
-function updateSplitSel(){
-  var els=$('drawerGrid').children;for(var i=0;i<els.length;i++){var pk=els[i].dataset.pkg;els[i].classList.toggle('sel',splitMode&&splitSel.indexOf(pk)>=0);}
-  $('splithint').textContent=splitMode?('화면분할: 앱 2개 선택 ('+splitSel.length+'/2)'):'';
+function startDrag(item,fromIdx,x,y){
+  drag={item:item,fromHomeIdx:(fromIdx==null?-1:fromIdx),ghost:makeGhost(item,x,y),moved:false};
+  if(fromIdx!=null){setEdit(true);$('trash').classList.add('show');}
+  document.addEventListener('pointermove',onDragMove,true);
+  document.addEventListener('pointerup',onDragUp,true);
+  document.addEventListener('pointercancel',onDragUp,true);
+}
+function onDragMove(e){
+  if(!drag)return;drag.moved=true;
+  drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
+  // 휴지통 핫존
+  var overTrash=drag.fromHomeIdx>=0&&hit($('trash'),e.clientX,e.clientY);
+  $('trash').classList.toggle('hot',!!overTrash);
+  // 합치기 후보(독 드래그가 홈 앱 위)
+  clearMergeHi();
+  if(drag.item.t==='a'){
+    var tgt=homeTileAt(e.clientX,e.clientY);
+    if(tgt&&tgt.idx!==drag.fromHomeIdx&&home[tgt.idx]&&home[tgt.idx].t==='a')tgt.el.classList.add('merge');
+  }
+  e.preventDefault();
+}
+function clearMergeHi(){var els=$('homegrid').querySelectorAll('.htile.merge');for(var i=0;i<els.length;i++)els[i].classList.remove('merge');}
+function hit(el,x,y){var r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;}
+function homeTileAt(x,y){var els=$('homegrid').children;for(var i=0;i<els.length;i++){if(hit(els[i],x,y))return {el:els[i],idx:+els[i].dataset.idx};}return null;}
+function insertIdxAt(x,y){
+  var els=$('homegrid').children;
+  for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();
+    if(y<r.bottom&&x<r.left+r.width/2)return i;
+    if(y<r.bottom&&x<r.right)return i+1;}
+  return home.length;
+}
+function onDragUp(e){
+  if(!drag)return;
+  document.removeEventListener('pointermove',onDragMove,true);
+  document.removeEventListener('pointerup',onDragUp,true);
+  document.removeEventListener('pointercancel',onDragUp,true);
+  var d=drag;drag=null;
+  try{d.ghost.remove()}catch(_){}
+  $('trash').classList.remove('show','hot');clearMergeHi();
+  var x=e.clientX,y=e.clientY;
+  if(d.fromHomeIdx>=0&&hit($('trash'),x,y)){home.splice(d.fromHomeIdx,1);saveHome();renderHome();return;}
+  if(hit($('dock'),x,y)){renderHome();return;}        // 독 위에 떨어뜨림 = 취소(제자리 롱프레스 오추가 방지)
+  var inHome=hit($('homegrid'),x,y)||hit($('desktop'),x,y);
+  // 합치기: 독(또는 다른 홈) 앱을 홈의 앱 위에 → 분할 아이콘(target=좌, dragged=우)
+  if(d.item.t==='a'){
+    var tgt=homeTileAt(x,y);
+    if(tgt&&tgt.idx!==d.fromHomeIdx&&home[tgt.idx]&&home[tgt.idx].t==='a'){
+      var leftPkg=home[tgt.idx].pkg, rightPkg=d.item.pkg;
+      home[tgt.idx]={t:'s',l:leftPkg,r:rightPkg};
+      if(d.fromHomeIdx>=0){var ri=d.fromHomeIdx; if(ri>tgt.idx)ri--; home.splice(d.fromHomeIdx,1);}
+      saveHome();renderHome();return;
+    }
+  }
+  if(inHome){
+    var ins=insertIdxAt(x,y);
+    if(d.fromHomeIdx>=0){var it=home.splice(d.fromHomeIdx,1)[0];if(ins>d.fromHomeIdx)ins--;home.splice(ins,0,it);}
+    else{home.splice(ins,0,d.item);}
+    saveHome();renderHome();return;
+  }
+  // 홈 밖에 떨어뜨림 → 변화 없음(독 드래그) / 제자리(홈 드래그)
+  renderHome();
 }
 
-// ── 작업표시줄 버튼 ──
+// 독 타일: 짧게탭=실행, 길게=드래그
+function bindDockTile(el,a){
+  var lp=null,sx=0,sy=0,started=false;
+  el.addEventListener('pointerdown',function(e){
+    sx=e.clientX;sy=e.clientY;started=false;
+    lp=setTimeout(function(){started=true;startDrag({t:'a',pkg:a.pkg},null,e.clientX,e.clientY);},330);
+  });
+  el.addEventListener('pointermove',function(e){
+    if(started)return;
+    if(Math.abs(e.clientX-sx)>12||Math.abs(e.clientY-sy)>12){if(lp){clearTimeout(lp);lp=null;}}
+  });
+  el.addEventListener('pointerup',function(e){
+    if(lp){clearTimeout(lp);lp=null;}
+    if(!started&&Math.abs(e.clientX-sx)<12&&Math.abs(e.clientY-sy)<12){launch(a.pkg);}
+  });
+  el.addEventListener('pointercancel',function(){if(lp){clearTimeout(lp);lp=null;}});
+}
+// 홈 타일: 짧게탭=실행, 길게=편집/드래그, ×버튼=삭제
+function bindHomeTile(el,item,idx){
+  var lp=null,sx=0,sy=0,started=false;
+  el.addEventListener('pointerdown',function(e){
+    if(e.target&&e.target.classList.contains('del')){home.splice(idx,1);saveHome();renderHome();e.stopPropagation();return;}
+    sx=e.clientX;sy=e.clientY;started=false;
+    lp=setTimeout(function(){started=true;startDrag(item,idx,e.clientX,e.clientY);},330);
+  });
+  el.addEventListener('pointermove',function(e){
+    if(started)return;
+    if(Math.abs(e.clientX-sx)>12||Math.abs(e.clientY-sy)>12){if(lp){clearTimeout(lp);lp=null;}}
+  });
+  el.addEventListener('pointerup',function(e){
+    if(lp){clearTimeout(lp);lp=null;}
+    if(started)return;
+    if($('desktop').classList.contains('edit')){setEdit(false);return;}
+    if(Math.abs(e.clientX-sx)<12&&Math.abs(e.clientY-sy)<12)launchItem(item);
+  });
+  el.addEventListener('pointercancel',function(){if(lp){clearTimeout(lp);lp=null;}});
+}
+
+// ── 작업표시줄/사이드 버튼 ──
 $('tbHome').onclick=showHome;
-$('tbBack').onclick=function(){send('key',{code:4});};
+$('tbBack').onclick=function(){send('key',{code:4,d:lastPanel});};
 $('tbRecent').onclick=openSwitcher;
-$('tbApps').onclick=function(){exitSplit();openDrawer();};
-$('tbSplit').onclick=enterSplit;
 $('tbgrab').onclick=function(){taskbarShow(true);};
-// ── 사이드 메뉴(좌측 엣지 스와이프) ──
 $('smHome').onclick=function(){sideShow(false);showHome();};
-$('smBack').onclick=function(){send('key',{code:4});};
+$('smBack').onclick=function(){sideShow(false);send('key',{code:4,d:lastPanel});};
 $('smRecent').onclick=function(){sideShow(false);openSwitcher();};
-$('smApps').onclick=function(){sideShow(false);exitSplit();openDrawer();};
-$('smSplit').onclick=function(){sideShow(false);enterSplit();};
 $('sideback').onclick=function(){sideShow(false);};
 (function(){var ez=$('edgezone'),sx=0,sy=0,tk=false;
   ez.addEventListener('pointerdown',function(e){sx=e.clientX;sy=e.clientY;tk=true;});
@@ -252,11 +417,9 @@ $('sideback').onclick=function(){sideShow(false);};
   ez.addEventListener('pointerup',function(){tk=false;});
   ez.addEventListener('pointercancel',function(){tk=false;});
 })();
-$('drawerClose').onclick=function(){exitSplit();$('drawer').classList.remove('show');if(!videoOn())showHome();};
-$('switchClose').onclick=function(){$('switcher').classList.remove('show');if(!videoOn())showHome();};
-function videoOn(){return $('video').style.display==='block';}
+$('switchClose').onclick=function(){$('switcher').classList.remove('show');if(!appShowing())showHome();};
 
-// ── 연결 품질(폰이 'stats' 브로드캐스트) ──
+// ── 연결 품질 ──
 function onStats(p){
   if(!p)return;var mbps=(p.kbps||0)/1000,rtt=p.rtt||0;
   $('tbqual').textContent=mbps.toFixed(1)+'M·'+rtt+'ms';
@@ -264,8 +427,11 @@ function onStats(p){
 }
 
 // ── WebRTC ──
+var splitView=false; // 현재(또는 진행중) 분할 화면 여부
+var lastPanel=0;     // 마지막 만진 패널(뒤로키 라우팅)
+var splitTrackCount=0;
 var connectWatch=null,connTries=0;
-function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');showHome();}
+function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');if(!appShowing())showHome();}
 function armWatchdog(){
   if(connectWatch)clearTimeout(connectWatch);
   connectWatch=setTimeout(function(){
@@ -276,32 +442,90 @@ function armWatchdog(){
 }
 function newPc(){
   pc=new RTCPeerConnection({iceServers:ICE});
-  pc.ontrack=function(e){$('video').srcObject=e.streams[0];};
+  splitTrackCount=0;
+  pc.ontrack=function(e){
+    var mid=(e.transceiver&&e.transceiver.mid)||null;
+    if(splitView){
+      var right=(mid==='1')||(mid==null&&splitTrackCount===1);
+      var ms=new MediaStream([e.track]);
+      if(right)$('vidR').srcObject=ms; else $('vidL').srcObject=ms;
+      splitTrackCount++;
+      showSplit();
+    }else{
+      $('video').srcObject=e.streams[0]||new MediaStream([e.track]);
+    }
+  };
   pc.onicecandidate=function(e){if(e.candidate)send('ice',{from:'receiver',candidate:{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}})};
   pc.onconnectionstatechange=function(){var s=pc.connectionState;st('P2P:'+s);if(s==='connected')onConnected();else if(s==='failed'||s==='closed')resetForReconnect();};
   pc.oniceconnectionstatechange=function(){var s=pc.iceConnectionState;if(s==='connected'||s==='completed')onConnected();else if(s==='failed')resetForReconnect();};
 }
-var pendingIce=[],remoteSet=false,answered=false;
+var pendingIce=[],remoteSet=false,answered=false,lastGen=-1;
 function resetForReconnect(){
   try{if(pc)pc.close()}catch(_){}
-  pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;
+  pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;lastGen=-1;
   try{$('video').srcObject=null}catch(_){}
-  $('video').style.display='none';$('desktop').classList.remove('show');taskbarHideAll();closeSheets();
+  $('video').style.display='none';$('splitwrap').classList.remove('show');$('desktop').classList.remove('show');$('dock').classList.remove('show');taskbarHideAll();sideShow(false);
   $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
   startReady();
 }
-async function onOffer(p){if(answered)return;answered=true;try{if(p.display){dispW=p.display.w||0;dispH=p.display.h||0;}if(!pc)newPc();await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});remoteSet=true;for(var i=0;i<pendingIce.length;i++){try{await pc.addIceCandidate(pendingIce[i])}catch(_){}}pendingIce=[];var a=await pc.createAnswer();await pc.setLocalDescription(a);send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});st('연결 중');armWatchdog();}catch(e){answered=false;$('msg').textContent='오류: '+e.message}}
+async function onOffer(p){
+  var gen=(typeof p.gen==='number')?p.gen:0;
+  if(answered&&gen===lastGen)return;            // 같은 offer 재전송 무시
+  var renego=answered&&gen!==lastGen;            // 새 offer(분할 전환/재협상)
+  lastGen=gen;
+  try{
+    if(renego){try{if(pc)pc.close()}catch(_){}pc=null;answered=false;remoteSet=false;pendingIce=[];}
+    answered=true;
+    splitView=!!p.split;
+    if(splitView&&p.displays){splitDisp[0]=p.displays[0]||null;splitDisp[1]=p.displays[1]||null;}
+    if(p.display){dispW=p.display.w||0;dispH=p.display.h||0;}
+    if(!pc)newPc();
+    await pc.setRemoteDescription({type:'offer',sdp:p.sdp.sdp});
+    remoteSet=true;
+    for(var i=0;i<pendingIce.length;i++){try{await pc.addIceCandidate(pendingIce[i])}catch(_){}}
+    pendingIce=[];
+    var a=await pc.createAnswer();await pc.setLocalDescription(a);
+    send('answer',{from:'receiver',sdp:{type:'answer',sdp:a.sdp}});
+    st('연결 중');armWatchdog();
+  }catch(e){answered=false;$('msg').textContent='오류: '+e.message}
+}
 async function onIce(p){if(p.from==='receiver'||!p.candidate)return;if(!pc||!remoteSet){pendingIce.push(p.candidate);return;}try{await pc.addIceCandidate(p.candidate)}catch(_){}}
 function onApps(p){if(p&&p.apps){apps=p.apps;renderApps();}}
 
-// ── 터치(영상=실행중인 앱) ──
-function vidToDisp(cx,cy){var v=$('video'),r=v.getBoundingClientRect();var iw=dispW||v.videoWidth,ih=dispH||v.videoHeight;if(!iw||!ih||!r.width||!r.height)return null;var s=Math.min(r.width/iw,r.height/ih);var dw=iw*s,dh=ih*s;var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;var x=(cx-ox)/s,y=(cy-oy)/s;if(x<0||x>iw||y<0||y>ih)return null;return{x:x,y:y};}
-(function(){var v=$('video');var down=false,lastP=null,lastMove=0;v.style.touchAction='none';
-  v.addEventListener('pointerdown',function(e){down=true;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:0,x:p.x,y:p.y});}e.preventDefault();});
-  v.addEventListener('pointermove',function(e){if(!down)return;var now=Date.now();if(now-lastMove<16)return;lastMove=now;var p=vidToDisp(e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:2,x:p.x,y:p.y});}});
-  v.addEventListener('pointerup',function(e){down=false;var p=vidToDisp(e.clientX,e.clientY)||lastP;if(p)send('touch',{a:1,x:p.x,y:p.y});});
-  v.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y});down=false;});
+// ── 분할 레이아웃(드래그 분할선) ──
+var splitRatio=0.5;
+function layoutSplit(){
+  var wrap=$('splitwrap');var W=wrap.clientWidth,H=wrap.clientHeight,DV=16;
+  var avail=W-DV;var lw=Math.round(avail*splitRatio);
+  $('vidL').style.width=lw+'px';$('vidL').style.height=H+'px';
+  $('vidR').style.width=(avail-lw)+'px';$('vidR').style.height=H+'px';
+}
+(function(){var sd=$('sdiv'),dragging=false;
+  sd.addEventListener('pointerdown',function(e){dragging=true;e.preventDefault();e.stopPropagation();});
+  document.addEventListener('pointermove',function(e){if(!dragging)return;var W=$('splitwrap').clientWidth||1;splitRatio=Math.max(0.2,Math.min(0.8,e.clientX/W));layoutSplit();});
+  document.addEventListener('pointerup',function(){dragging=false;});
 })();
+window.addEventListener('resize',function(){if($('splitwrap').classList.contains('show'))layoutSplit();});
+
+// ── 터치 → 디스플레이 픽셀 매핑 ──
+function mapTouch(el,w,h,cx,cy){
+  var r=el.getBoundingClientRect();var iw=w||el.videoWidth,ih=h||el.videoHeight;
+  if(!iw||!ih||!r.width||!r.height)return null;
+  var s=Math.min(r.width/iw,r.height/ih);var dw=iw*s,dh=ih*s;
+  var ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;
+  var x=(cx-ox)/s,y=(cy-oy)/s;if(x<0||x>iw||y<0||y>ih)return null;return {x:x,y:y};
+}
+function bindTouch(el,getDims,panel){
+  var down=false,lastP=null,lastMove=0;el.style.touchAction='none';
+  function dims(){return getDims();}
+  el.addEventListener('pointerdown',function(e){down=true;lastPanel=panel;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:0,x:p.x,y:p.y,d:panel});}e.preventDefault();});
+  el.addEventListener('pointermove',function(e){if(!down)return;var now=Date.now();if(now-lastMove<16)return;lastMove=now;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY);if(p){lastP=p;send('touch',{a:2,x:p.x,y:p.y,d:panel});}});
+  el.addEventListener('pointerup',function(e){down=false;var dm=dims();var p=mapTouch(el,dm.w,dm.h,e.clientX,e.clientY)||lastP;if(p)send('touch',{a:1,x:p.x,y:p.y,d:panel});});
+  el.addEventListener('pointercancel',function(){if(down&&lastP)send('touch',{a:1,x:lastP.x,y:lastP.y,d:panel});down=false;});
+}
+bindTouch($('video'),function(){return {w:dispW,h:dispH}},0);
+bindTouch($('vidL'),function(){return splitDisp[0]||{w:0,h:0}},0);
+bindTouch($('vidR'),function(){return splitDisp[1]||{w:0,h:0}},1);
 
 // 테슬라 브라우저 크롬 → 첫 탭 풀스크린(best-effort)
 var fsTried=false;
@@ -326,7 +550,7 @@ async function connect(room){
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
     .on('broadcast',{event:'ice'},function(m){onIce(m.payload)})
     .on('broadcast',{event:'apps'},function(m){onApps(m.payload)})
-    .on('broadcast',{event:'app-launched'},function(){showVideo()})
+    .on('broadcast',{event:'app-launched'},function(){if(splitView)showSplit();else showVideo();})
     .on('broadcast',{event:'stats'},function(m){onStats(m.payload)})
     .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');startReady();}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
 }
@@ -334,7 +558,7 @@ function startWithCode(code){
   code=(code||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toUpperCase();
   if(!code)return;
   try{localStorage.setItem('tevue_code',code)}catch(_){}
-  curCode=code;loadCal();
+  curCode=code;loadCal();loadHome();renderHome();
   $('codebox').style.display='none';$('dots').style.display='';$('msg').textContent='폰과 연결 중…';
   connect('tevue:'+code);
 }
@@ -346,7 +570,7 @@ function showInput(){
 }
 $('changecode').onclick=function(){try{localStorage.removeItem('tevue_code')}catch(_){}location.reload();};
 
-// ── 화면 보정(코너 2탭) ──
+// ── 화면 보정(코너 2탭) — 단일 화면용 ──
 var curCode='';
 function calKey(){return 'tevue_cal_'+(curCode||'');}
 function loadCal(){try{var s=localStorage.getItem(calKey());cal=s?JSON.parse(s):null;}catch(_){cal=null;}applyCal();}
