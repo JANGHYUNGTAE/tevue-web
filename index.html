@@ -272,10 +272,15 @@ var fsTried=false;
 function tryFullscreen(){if(fsTried)return;fsTried=true;var el=document.documentElement;var fn=el.requestFullscreen||el.webkitRequestFullscreen;if(fn){try{var r=fn.call(el);if(r&&r.catch)r.catch(function(){});}catch(_){}}}
 document.addEventListener('pointerdown',tryFullscreen,{once:false});
 var readyTimer=null;
-function vpSize(){var vv=window.visualViewport;return {w:Math.round((vv&&vv.width)||window.innerWidth),h:Math.round((vv&&vv.height)||window.innerHeight)};}
+function isLandscape(){try{if(window.matchMedia&&window.matchMedia('(orientation: landscape)').matches)return true;}catch(_){}try{var o=screen.orientation||screen.msOrientation||screen.mozOrientation;if(o&&typeof o.angle==='number'&&Math.abs(o.angle)%180===90)return true;if(o&&typeof o.type==='string'&&o.type.indexOf('landscape')>=0)return true;}catch(_){}return window.innerWidth>window.innerHeight;}
+function vpSize(){var vv=window.visualViewport;var w=Math.round((vv&&vv.width)||window.innerWidth),h=Math.round((vv&&vv.height)||window.innerHeight);if(isLandscape()&&w<h){var t=w;w=h;h=t;}return {w:w,h:h};}
 function readyMsg(){var d=Math.min(3,Math.max(1,window.devicePixelRatio||1));if(cal&&cal.w>40&&cal.h>40)return {w:cal.w,h:cal.h,dpr:d};var s=vpSize();return {w:s.w,h:s.h,dpr:d};}
 function startReady(){if(readyTimer)return;send('ready',readyMsg());readyTimer=setInterval(function(){if(remoteSet){stopReady();return;}send('ready',readyMsg());},2000);}
 function stopReady(){if(readyTimer){clearInterval(readyTimer);readyTimer=null;}}
+var readyOrient=isLandscape(),readyOrientTimer=null;
+function onReadyOrientChange(){if(readyOrientTimer)clearTimeout(readyOrientTimer);readyOrientTimer=setTimeout(function(){var cur=isLandscape();if(cur!==readyOrient){readyOrient=cur;send('ready',readyMsg());}},600);}
+window.addEventListener('orientationchange',onReadyOrientChange);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',onReadyOrientChange);
 async function connect(room){
   st('방 입장');$('status').style.display='block';
   $('changecode').style.display='block';$('calibrate').style.display='block';
