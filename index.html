@@ -10,6 +10,11 @@ button{font-family:inherit}
 /* 롱프레스 이미지 저장/드래그 콜아웃 차단 */
 img{-webkit-user-drag:none;-webkit-touch-callout:none;pointer-events:none}
 #video{position:fixed;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none;z-index:5}
+/* ── 캐스트 플레이어(URL 직접 재생) ── */
+#castwrap{position:fixed;inset:0;z-index:20;background:#000;display:none}
+.castmedia{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:contain;background:#000}
+#castclose{position:fixed;top:12px;right:12px;z-index:21;width:46px;height:46px;border-radius:50%;border:0;
+  background:rgba(20,26,40,.7);color:#fff;font-size:20px;cursor:pointer}
 
 /* ── 분할(2디스플레이 좌우 합성) ── */
 #splitwrap{position:fixed;inset:0;z-index:6;display:none;background:#000}
@@ -121,6 +126,7 @@ h1{font-size:48px;font-weight:800;margin:0;letter-spacing:-1px}h1 .v{color:var(-
 </style></head>
 <body oncontextmenu="return false">
 <video id="video" autoplay playsinline></video>
+<div id="castwrap"></div>
 
 <!-- 분할(좌우 합성) -->
 <div id="splitwrap"><video id="vidL" class="spv" autoplay playsinline></video><div id="sdiv"></div><video id="vidR" class="spv" autoplay playsinline></video></div>
@@ -277,6 +283,21 @@ function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.r
   $('video').style.display='block';applyCal();fabShow(true);taskbarShow(true);}
 function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');$('drawer').classList.remove('show');
   $('splitwrap').classList.add('show');layoutSplit();fabShow(true);taskbarShow(true);}
+
+// ── 캐스트(URL 핸드오프) — 폰이 보낸 URL을 차에서 직접 재생(영상=video, 유튜브/웹=iframe) ──
+function stopCast(){var h=$('castwrap');if(h){h.innerHTML='';h.style.display='none';}if(connected&&!appShowing())showHome();}
+function onCast(p){
+  if(!p||!p.url)return;
+  stopCast();
+  $('panel').classList.add('hidden');$('desktop').classList.remove('show');$('splitwrap').classList.remove('show');$('video').style.display='none';
+  try{fabShow(false);taskbarShow(false);}catch(_){}
+  var h=$('castwrap'),el;
+  if(p.kind==='video'){el=document.createElement('video');el.autoplay=true;el.controls=true;el.setAttribute('playsinline','');el.src=p.url;}
+  else{el=document.createElement('iframe');el.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');el.setAttribute('allowfullscreen','');el.src=p.url;}
+  el.className='castmedia';h.appendChild(el);
+  var x=document.createElement('button');x.id='castclose';x.textContent='✕';x.onclick=function(){stopCast();send('cast-closed',{});};h.appendChild(x);
+  h.style.display='block';st('캐스트 재생 중');
+}
 
 function launch(pkg){
   recents=[pkg].concat(recents.filter(function(p){return p!==pkg}));
@@ -586,6 +607,8 @@ async function connect(room){
     .on('broadcast',{event:'icons'},function(m){onIcons(m.payload)})
     .on('broadcast',{event:'app-launched'},function(){if(splitView)showSplit();else showVideo();})
     .on('broadcast',{event:'stats'},function(m){onStats(m.payload)})
+    .on('broadcast',{event:'cast'},function(m){onCast(m.payload)})
+    .on('broadcast',{event:'cast-stop'},function(){stopCast()})
     .subscribe(function(s){if(s==='SUBSCRIBED'){st('폰 대기 중');startReady();}else if(s==='CHANNEL_ERROR'){$('msg').textContent='연결 실패 — 재시도하세요'}});
 }
 function startWithCode(code){
