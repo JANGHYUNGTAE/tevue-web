@@ -312,7 +312,9 @@ function onCast(p){
   try{fabShow(false);taskbarHideAll();}catch(_){}  // 캐스트는 런처 UI 없음 — 콘텐츠 + 닫기(✕)만
   var h=$('castwrap'),el;
   if(p.kind==='video'){el=document.createElement('video');el.autoplay=true;el.controls=true;el.setAttribute('playsinline','');el.src=p.url;}
-  else{el=document.createElement('iframe');el.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');el.setAttribute('allowfullscreen','');el.src=p.url;}
+  else{el=document.createElement('iframe');el.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');el.setAttribute('allowfullscreen','');
+    // allow-popups 제외 → 관련영상/'유튜브 바로가기' 탭이 새 창 못 열게 차단(자동 믹스로 이어재생은 유지).
+    el.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation allow-forms');el.src=p.url;}
   el.className='castmedia';h.appendChild(el);
   var x=document.createElement('button');x.id='castclose';x.textContent='✕';x.onclick=function(){stopCast();send('cast-closed',{});};h.appendChild(x);
   h.style.display='block';st('캐스트 재생 중');fadeChrome();
