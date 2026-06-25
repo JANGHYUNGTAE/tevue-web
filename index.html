@@ -598,7 +598,8 @@ if(window.visualViewport)window.visualViewport.addEventListener('resize',onReady
 async function connect(room){
   st('방 입장');$('status').style.display='block';
   $('changecode').style.display='block';$('calibrate').style.display='block';
-  setTimeout(function(){$('changecode').style.display='none';$('calibrate').style.display='none';},10000);
+  // '코드 변경'은 상시 노출(연결이 안 될 때 차에서 코드를 다시 입력할 수 있어야 함). 보정만 10초 후 숨김.
+  setTimeout(function(){$('calibrate').style.display='none';},10000);
   sb=window.supabase.createClient(SB_URL,SB_KEY,{realtime:{params:{eventsPerSecond:20}}});
   channel=sb.channel(room,{config:{broadcast:{self:false,ack:false}}});
   channel.on('broadcast',{event:'offer'},function(m){onOffer(m.payload)})
