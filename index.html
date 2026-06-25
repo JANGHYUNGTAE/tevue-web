@@ -285,10 +285,15 @@ function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.r
   $('splitwrap').classList.add('show');layoutSplit();fabShow(true);taskbarShow(true);}
 
 // ── 캐스트(URL 핸드오프) — 폰이 보낸 URL을 차에서 직접 재생(영상=video, 유튜브/웹=iframe) ──
-function stopCast(){var h=$('castwrap');if(h){h.innerHTML='';h.style.display='none';}if(connected&&!appShowing())showHome();}
+var castUrl=null;
+function stopCast(){castUrl=null;var h=$('castwrap');if(h){h.innerHTML='';h.style.display='none';}if(connected&&!appShowing())showHome();}
 function onCast(p){
   if(!p||!p.url)return;
+  // 같은 URL 재전송은 무시 — 폰이 ready 핸드셰이크(2초)마다 다시 보내도 플레이어 재생성 안 함(새로고침 방지).
+  if(p.url===castUrl)return;
+  try{stopReady();}catch(_){}   // 캐스트 중엔 미러링용 ready 송신 중단
   stopCast();
+  castUrl=p.url;
   $('panel').classList.add('hidden');$('desktop').classList.remove('show');$('splitwrap').classList.remove('show');$('video').style.display='none';
   try{fabShow(false);taskbarShow(false);}catch(_){}
   var h=$('castwrap'),el;
