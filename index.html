@@ -277,10 +277,24 @@ function taskbarShow(temp){
 function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('taskbar').classList.remove('show');}
 function appShowing(){return $('video').style.display==='block'||$('splitwrap').classList.contains('show');}
 function fabShow(v){$('menufab').classList.toggle('show',v);}
+// 정상 연결/캐스팅되면 상태문구(#status)·코드변경 버튼을 페이드아웃(깔끔한 화면).
+var chromeFadeT=null;
+function fadeChrome(){
+  if(chromeFadeT)clearTimeout(chromeFadeT);
+  chromeFadeT=setTimeout(function(){
+    ['status','changecode'].forEach(function(id){var e=$(id);if(e){e.style.transition='opacity .6s';e.style.opacity='0';setTimeout(function(){e.style.display='none';},650);}});
+  },1500); // 1.5초간 보여준 뒤 사라짐
+}
+function showChrome(){ // 재연결/대기 시 다시 표시
+  if(chromeFadeT){clearTimeout(chromeFadeT);chromeFadeT=null;}
+  var s=$('status');if(s){s.style.opacity='1';s.style.display='block';}
+  var c=$('changecode');if(c){c.style.opacity='1';c.style.display='block';}
+}
 function showHome(){connected=true;setEdit(false);$('panel').classList.add('hidden');$('video').style.display='none';$('splitwrap').classList.remove('show');
   $('desktop').classList.add('show');$('switcher').classList.remove('show');$('drawer').classList.remove('show');taskbarHideAll();fabShow(true);}
 function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');$('drawer').classList.remove('show');
-  $('video').style.display='block';applyCal();fabShow(true);taskbarShow(true);}
+  $('video').style.display='block';applyCal();
+  if(dexMode){fabShow(true);taskbarShow(true);}else{fabShow(false);taskbarHideAll();}}
 function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');$('drawer').classList.remove('show');
   $('splitwrap').classList.add('show');layoutSplit();fabShow(true);taskbarShow(true);}
 
@@ -301,7 +315,7 @@ function onCast(p){
   else{el=document.createElement('iframe');el.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');el.setAttribute('allowfullscreen','');el.src=p.url;}
   el.className='castmedia';h.appendChild(el);
   var x=document.createElement('button');x.id='castclose';x.textContent='✕';x.onclick=function(){stopCast();send('cast-closed',{});};h.appendChild(x);
-  h.style.display='block';st('캐스트 재생 중');
+  h.style.display='block';st('캐스트 재생 중');fadeChrome();
 }
 
 function launch(pkg){
@@ -468,7 +482,7 @@ var splitView=false; // 현재(또는 진행중) 분할 화면 여부
 var lastPanel=0;     // 마지막 만진 패널(뒤로키 라우팅)
 var splitTrackCount=0;
 var connectWatch=null,connTries=0;
-function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');if(!appShowing())showHome();}
+function onConnected(){if(connected)return;connected=true;if(connectWatch){clearTimeout(connectWatch);connectWatch=null;}st('미러링 중');if(!appShowing()){if(dexMode)showHome();else showVideo();}fadeChrome();}
 function armWatchdog(){
   if(connectWatch)clearTimeout(connectWatch);
   connectWatch=setTimeout(function(){
@@ -495,6 +509,7 @@ function newPc(){
       showSplit();
     }else{
       $('video').srcObject=e.streams[0]||new MediaStream([e.track]);
+      if(!dexMode)showVideo(); // 일반 미러링: 폰 화면을 바로 풀스크린(런처 UI 없음)
     }
   };
   pc.onicecandidate=function(e){if(e.candidate)send('ice',{from:'receiver',candidate:{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}})};
@@ -502,9 +517,10 @@ function newPc(){
   pc.oniceconnectionstatechange=function(){var s=pc.iceConnectionState;if(s==='connected'||s==='completed')onConnected();else if(s==='failed')resetForReconnect();};
 }
 var pendingIce=[],remoteSet=false,answered=false,lastGen=-1;
+var dexMode=true; // offer.dex 로 설정. 듀얼=true(런처 UI/FAB), 일반 미러링=false(화면만, UI 없음)
 function resetForReconnect(){
   try{if(pc)pc.close()}catch(_){}
-  pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;lastGen=-1;
+  pc=null;answered=false;remoteSet=false;pendingIce=[];connected=false;lastGen=-1;showChrome();
   try{$('video').srcObject=null}catch(_){}
   $('video').style.display='none';$('splitwrap').classList.remove('show');$('desktop').classList.remove('show');$('drawer').classList.remove('show');taskbarHideAll();fabShow(false);
   $('panel').classList.remove('hidden');$('msg').textContent='폰과 연결 중…';
@@ -515,6 +531,7 @@ async function onOffer(p){
   if(answered&&gen===lastGen)return;            // 같은 offer 재전송 무시
   var renego=answered&&gen!==lastGen;            // 새 offer(분할 전환/재협상)
   lastGen=gen;
+  if(typeof p.dex==='boolean')dexMode=p.dex; // 일반 미러링이면 런처 UI 없이 화면만
   try{
     if(renego){try{if(pc)pc.close()}catch(_){}pc=null;answered=false;remoteSet=false;pendingIce=[];}
     answered=true;
