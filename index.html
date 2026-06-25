@@ -278,7 +278,7 @@ function taskbarHideAll(){if(tbTimer){clearTimeout(tbTimer);tbTimer=null;}$('tas
 function appShowing(){return $('video').style.display==='block'||$('splitwrap').classList.contains('show');}
 function fabShow(v){$('menufab').classList.toggle('show',v);}
 function showHome(){connected=true;setEdit(false);$('panel').classList.add('hidden');$('video').style.display='none';$('splitwrap').classList.remove('show');
-  $('desktop').classList.add('show');$('switcher').classList.remove('show');$('drawer').classList.remove('show');taskbarShow(false);fabShow(true);}
+  $('desktop').classList.add('show');$('switcher').classList.remove('show');$('drawer').classList.remove('show');taskbarHideAll();fabShow(true);}
 function showVideo(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('splitwrap').classList.remove('show');$('switcher').classList.remove('show');$('drawer').classList.remove('show');
   $('video').style.display='block';applyCal();fabShow(true);taskbarShow(true);}
 function showSplit(){$('panel').classList.add('hidden');$('desktop').classList.remove('show');$('video').style.display='none';$('switcher').classList.remove('show');$('drawer').classList.remove('show');
@@ -295,7 +295,7 @@ function onCast(p){
   stopCast();
   castUrl=p.url;
   $('panel').classList.add('hidden');$('desktop').classList.remove('show');$('splitwrap').classList.remove('show');$('video').style.display='none';
-  try{fabShow(false);taskbarShow(false);}catch(_){}
+  try{fabShow(false);taskbarHideAll();}catch(_){}  // 캐스트는 런처 UI 없음 — 콘텐츠 + 닫기(✕)만
   var h=$('castwrap'),el;
   if(p.kind==='video'){el=document.createElement('video');el.autoplay=true;el.controls=true;el.setAttribute('playsinline','');el.src=p.url;}
   else{el=document.createElement('iframe');el.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');el.setAttribute('allowfullscreen','');el.src=p.url;}
